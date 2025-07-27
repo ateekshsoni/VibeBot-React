@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
 import Campaigns from './pages/Campaigns'
 import Messages from './pages/Messages'
+import Instagram from './pages/Instagram'
 import ProtectedRoute from './components/ProtectedRoute'
 
 const App = () => {
@@ -31,7 +32,15 @@ const App = () => {
           } 
         />
         <Route 
-          path='/analytics' 
+          path='/user/:userId/dashboard' 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path='/user/:userId/analytics' 
           element={
             <ProtectedRoute>
               <Analytics />
@@ -39,7 +48,7 @@ const App = () => {
           } 
         />
         <Route 
-          path='/settings' 
+          path='/user/:userId/settings' 
           element={
             <ProtectedRoute>
               <Settings />
@@ -47,7 +56,7 @@ const App = () => {
           } 
         />
         <Route 
-          path='/campaigns' 
+          path='/user/:userId/campaigns' 
           element={
             <ProtectedRoute>
               <Campaigns />
@@ -55,10 +64,18 @@ const App = () => {
           } 
         />
         <Route 
-          path='/messages' 
+          path='/user/:userId/messages' 
           element={
             <ProtectedRoute>
               <Messages />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path='/user/:userId/instagram' 
+          element={
+            <ProtectedRoute>
+              <Instagram />
             </ProtectedRoute>
           } 
         />

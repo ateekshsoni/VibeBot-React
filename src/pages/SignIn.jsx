@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 
 const SignInForm = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const { user } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,15 @@ const SignInForm = () => {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/dashboard");
+        // Redirect to user-specific dashboard
+        setTimeout(() => {
+          if (result.createdSessionId) {
+            // Get the user ID from the session and redirect
+            navigate(`/user/${result.createdUserId || 'dashboard'}/dashboard`);
+          } else {
+            navigate("/dashboard");
+          }
+        }, 100);
       } else {
         console.log(result);
       }

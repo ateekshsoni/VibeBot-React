@@ -57,7 +57,14 @@ const SignUpForm = () => {
 
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
-        navigate("/dashboard");
+        // Redirect to user-specific dashboard
+        setTimeout(() => {
+          if (completeSignUp.createdUserId) {
+            navigate(`/user/${completeSignUp.createdUserId}/dashboard`);
+          } else {
+            navigate("/dashboard");
+          }
+        }, 100);
       }
     } catch (err) {
       console.error("Error:", err);

@@ -3,7 +3,6 @@ import {
   SignedIn, 
   SignedOut, 
   SignInButton, 
-  UserButton, 
   useUser 
 } from "@clerk/clerk-react";
 import { Button } from "../components/ui/button";
@@ -66,13 +65,6 @@ const Dashboard = () => {
               Ready to manage your Instagram automation?
             </p>
           </div>
-          <UserButton 
-            appearance={{
-              elements: {
-                avatarBox: "w-12 h-12"
-              }
-            }}
-          />
         </div>
       </div>
     );
@@ -136,13 +128,6 @@ const Dashboard = () => {
               <div className="flex items-center space-x-4">
                 <DarkModeToggle />
                 <NotificationDropdown />
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-8 h-8"
-                    }
-                  }}
-                />
               </div>
             </div>
           </div>

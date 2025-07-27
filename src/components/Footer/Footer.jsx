@@ -1,5 +1,5 @@
 import React from "react";
-import Newsletter from "./Newsletter";
+import Newsletter from "./NewsLetter";
 import FooterLinks from "./FooterLinks";
 import FooterCredits from "./FooterCredits";
 

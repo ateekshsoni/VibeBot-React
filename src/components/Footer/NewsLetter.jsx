@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "../ui/button";
 
 const Newsletter = () => {
   return (
@@ -21,7 +22,9 @@ const Newsletter = () => {
             placeholder="Your Email Here"
             className="flex-1 px-3 py-3 border border-gray-300 rounded-xl font-lato text-base leading-6 text-dark placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
-          <button>Subscribe</button>
+          <Button variant="outline" size="default">
+            Subscribe
+          </Button>
         </div>
         <p className="font-lato text-xs leading-4 text-dark mt-3">
           By subscribing, you agree to our{" "}

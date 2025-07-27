@@ -1,4 +1,6 @@
-import React from "react";
+import React from 'react'
+import { Button } from '../ui/button'
+
 const FeatureShowcase = () => {
   return (
     <section className="bg-white py-16 lg:py-28">
@@ -19,22 +21,19 @@ const FeatureShowcase = () => {
                 Effortlessly Automate Your Instagram DMs
               </h2>
               <p className="font-lato text-lg leading-7 text-dark">
-                Streamline your communication with our powerful DM automation
-                feature. Engage your audience instantly and enhance your brand's
-                responsiveness.
+                Streamline your communication with our powerful DM automation feature. 
+                Engage your audience instantly and enhance your brand's responsiveness.
               </p>
             </div>
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button >
+              <Button variant="outline" size="lg">
                 Learn More
-              </button>
+              </Button>
               <button className="flex items-center space-x-2 text-dark hover:text-primary transition-colors">
-                <span className="font-lato font-medium text-base leading-6">
-                  Sign Up
-                </span>
-                <img
+                <span className="font-lato font-medium text-base leading-6">Sign Up</span>
+                <img 
                   src="https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/yX8L11FRUX.svg"
                   alt="Arrow Right"
                   className="w-6 h-6"
@@ -45,7 +44,7 @@ const FeatureShowcase = () => {
 
           {/* Right Column - Image */}
           <div className="relative">
-            <img
+            <img 
               src="https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/YcckPkQu3M.png"
               alt="DM Automation Interface"
               className="w-full h-auto rounded-2xl shadow-lg"
@@ -54,7 +53,7 @@ const FeatureShowcase = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default FeatureShowcase;
+export default FeatureShowcase

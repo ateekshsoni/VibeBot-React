@@ -1,29 +1,25 @@
 import React from "react";
-import FeatureCard from "./FeatureCard";
+import { Button } from '../ui/button'
+import FeatureCard from './FeatureCard'
 
 const Features = () => {
   const features = [
     {
-      image:
-        "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/kw4woOjOxL.png",
+      image: "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/kw4woOjOxL.png",
       title: "Custom Chatbot Flows Tailored to Your Needs",
-      description:
-        "Design personalized chatbot experiences that resonate with your audience.",
+      description: "Design personalized chatbot experiences that resonate with your audience."
     },
     {
-      image:
-        "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/4LGgLZ6ZGb.png",
+      image: "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/4LGgLZ6ZGb.png",
       title: "Comment-Triggered Responses for Immediate Engagement",
-      description:
-        "Respond to comments instantly and keep conversations flowing.",
+      description: "Respond to comments instantly and keep conversations flowing."
     },
     {
-      image:
-        "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/wfb7QGH9MF.png",
+      image: "https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/wfb7QGH9MF.png",
       title: "Engagement Analytics to Measure Your Success",
-      description: "Track performance metrics to optimize your strategy.",
-    },
-  ];
+      description: "Track performance metrics to optimize your strategy."
+    }
+  ]
 
   return (
     <section className="bg-white py-16 lg:py-28">
@@ -44,9 +40,8 @@ const Features = () => {
                 Unlock the Power of Chat Automation
               </h2>
               <p className="font-lato text-lg leading-7 text-dark">
-                Transform your Instagram engagement with our innovative chat
-                automation tools. Streamline communication and enhance customer
-                interactions effortlessly.
+                Transform your Instagram engagement with our innovative chat automation tools. 
+                Streamline communication and enhance customer interactions effortlessly.
               </p>
             </div>
           </div>
@@ -54,7 +49,7 @@ const Features = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
             {features.map((feature, index) => (
-              <FeatureCard
+              <FeatureCard 
                 key={index}
                 image={feature.image}
                 title={feature.title}
@@ -65,12 +60,12 @@ const Features = () => {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <button>Learn More</button>
+            <Button variant="outline" size="lg">
+              Learn More
+            </Button>
             <button className="flex items-center space-x-2 text-dark hover:text-primary transition-colors">
-              <span className="font-lato font-medium text-base leading-6">
-                Sign Up
-              </span>
-              <img
+              <span className="font-lato font-medium text-base leading-6">Sign Up</span>
+              <img 
                 src="https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/FBx7xhqPXa.svg"
                 alt="Arrow Right"
                 className="w-6 h-6"
@@ -80,7 +75,7 @@ const Features = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default Features;
+export default Features

@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "../ui/button";
 
 const CTA = () => {
   return (
@@ -20,8 +21,12 @@ const CTA = () => {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button>Sign Up</button>
-              <button>Request</button>
+              <Button variant="primary" size="lg">
+                Sign Up
+              </Button>
+              <Button variant="outline" size="lg">
+                Request
+              </Button>
             </div>
           </div>
 

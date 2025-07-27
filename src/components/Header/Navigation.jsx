@@ -1,5 +1,11 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '../ui/button'
+import { 
+  SignedIn, 
+  SignedOut,
+  UserButton 
+} from '@clerk/clerk-react'
 
 const Navigation = ({ onMegaMenuToggle, onMobileMenuToggle, isMegaMenuOpen }) => {
   return (
@@ -24,6 +30,11 @@ const Navigation = ({ onMegaMenuToggle, onMobileMenuToggle, isMegaMenuOpen }) =>
         <a href="#pricing" className="text-dark font-lato text-base leading-6 hover:text-primary transition-colors">
           Pricing
         </a>
+        <SignedIn>
+          <a href="/dashboard" className="text-dark font-lato text-base leading-6 hover:text-primary transition-colors">
+            Dashboard
+          </a>
+        </SignedIn>
         <button 
           onClick={onMegaMenuToggle}
           className="flex items-center space-x-1 text-dark font-lato text-base leading-6 hover:text-primary transition-colors"
@@ -39,12 +50,27 @@ const Navigation = ({ onMegaMenuToggle, onMobileMenuToggle, isMegaMenuOpen }) =>
 
       {/* Desktop Actions */}
       <div className="hidden lg:flex items-center space-x-4">
-        <Button variant="outline" size="sm">
-          Join
-        </Button>
-        <Button variant="primary" size="sm">
-          Start
-        </Button>
+        <SignedOut>
+          <Link to="/signin">
+            <Button variant="outline" size="sm">
+              Sign In
+            </Button>
+          </Link>
+          <Link to="/signup">
+            <Button size="sm">
+              Sign Up
+            </Button>
+          </Link>
+        </SignedOut>
+        <SignedIn>
+          <UserButton 
+            appearance={{
+              elements: {
+                avatarBox: "w-10 h-10"
+              }
+            }}
+          />
+        </SignedIn>
       </div>
 
       {/* Mobile Menu Button */}

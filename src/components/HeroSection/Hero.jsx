@@ -1,12 +1,12 @@
 import React from "react";
-import { Button } from '../ui/button'
+import { Button } from "../ui/button";
 
 const Hero = () => {
   return (
     <section className="bg-white">
       {/* Hero Image */}
       <div className="w-full h-64 md:h-80 lg:h-96 xl:h-[663px] relative overflow-hidden">
-        <img 
+        <img
           src="https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-27/nvG7j9Go6z.png"
           alt="InstaFlow Dashboard"
           className="w-full h-full object-cover"
@@ -27,10 +27,12 @@ const Hero = () => {
             {/* Right Column - Description & Actions */}
             <div className="space-y-8">
               <p className="font-lato text-lg leading-7 text-dark">
-                InstaFlow empowers businesses and influencers to effortlessly manage their Instagram interactions. 
-                Automate DMs, respond to comments, and analyze your engagement—all from one intuitive dashboard.
+                InstaFlow empowers businesses and influencers to effortlessly
+                manage their Instagram interactions. Automate DMs, respond to
+                comments, and analyze your engagement—all from one intuitive
+                dashboard.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button variant="primary" size="lg">
                   Sign Up
@@ -44,7 +46,7 @@ const Hero = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Hero
+export default Hero;

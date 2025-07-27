@@ -97,14 +97,13 @@ const Dashboard = () => {
         <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
       )}
 
-      <div className="lg:flex">
-        {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main Content */}
-        <div className="flex-1 min-h-screen">
+      {/* Main Content - with left margin to account for fixed sidebar */}
+      <div className="lg:ml-64">
         {/* Top Navigation */}
-        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Mobile menu button */}
@@ -149,8 +148,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Dashboard Content */}
-        <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+        {/* Dashboard Content - Scrollable */}
+        <div className="h-screen overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto space-y-8">
           <SignedOut>
             <div className="text-center py-20">
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -172,10 +172,10 @@ const Dashboard = () => {
             
             {/* Enhanced Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="group bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-800 dark:to-blue-900/10 p-6 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-blue-500/25">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h2V4a2 2 0 012-2h4a2 2 0 012 2v4z" />
                     </svg>
                   </div>
@@ -184,7 +184,7 @@ const Dashboard = () => {
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{dashboardStats.messagesSent.value.toLocaleString()}</p>
                     <div className="flex items-center mt-1">
                       <TrendingUp className={`w-4 h-4 mr-1 ${dashboardStats.messagesSent.trend === 'up' ? 'text-green-500' : 'text-red-500'}`} />
-                      <span className={`text-sm ${dashboardStats.messagesSent.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <span className={`text-sm font-medium ${dashboardStats.messagesSent.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         +{dashboardStats.messagesSent.change}%
                       </span>
                     </div>
@@ -192,10 +192,10 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div className="group bg-gradient-to-br from-white to-green-50/50 dark:from-gray-800 dark:to-green-900/10 p-6 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center">
-                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg shadow-green-500/25">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
@@ -371,7 +371,7 @@ const Dashboard = () => {
               </div>
             </div>
           </SignedIn>
-        </div>
+          </div>
         </div>
       </div>
     </div>

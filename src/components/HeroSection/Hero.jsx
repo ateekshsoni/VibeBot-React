@@ -1,10 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from '../ui/button'
-import { 
-  SignedIn, 
-  SignedOut
-} from '@clerk/clerk-react'
+import { Button } from "../ui/button";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 const Hero = () => {
   return (
@@ -41,16 +38,12 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <SignedOut>
                   <Link to="/signup">
-                    <Button size="lg">
-                      Get Started Free
-                    </Button>
+                    <Button size="lg">Get Started Free</Button>
                   </Link>
                 </SignedOut>
                 <SignedIn>
                   <Link to="/dashboard">
-                    <Button size="lg">
-                      Go to Dashboard
-                    </Button>
+                    <Button size="lg">Go to Dashboard</Button>
                   </Link>
                 </SignedIn>
                 <Button variant="outline" size="lg">

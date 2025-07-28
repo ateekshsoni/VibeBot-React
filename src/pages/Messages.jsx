@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Sidebar } from '../components/Layout/Sidebar';
-import { Button } from '../components/ui/button';
-import { 
-  Search, 
-  Filter, 
-  Send, 
-  Reply, 
+import React, { useState } from "react";
+import { Sidebar } from "../components/Layout/Sidebar";
+import { Button } from "../components/ui/button";
+import {
+  Search,
+  Filter,
+  Send,
+  Reply,
   Archive,
   Star,
   Clock,
   CheckCircle2,
   User,
-  MessageCircle
-} from 'lucide-react';
+  MessageCircle,
+} from "lucide-react";
 
 const Messages = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,63 +20,81 @@ const Messages = () => {
   const [messages] = useState([
     {
       id: 1,
-      sender: 'Sarah Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b789?w=150',
-      message: 'Hi! I\'m interested in your latest product launch. Can you tell me more about the pricing?',
-      time: '2 hours ago',
-      status: 'unread',
-      platform: 'instagram'
+      sender: "Sarah Johnson",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108755-2616b612b789?w=150",
+      message:
+        "Hi! I'm interested in your latest product launch. Can you tell me more about the pricing?",
+      time: "2 hours ago",
+      status: "unread",
+      platform: "instagram",
     },
     {
       id: 2,
-      sender: 'Mike Chen',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      message: 'Thank you for the quick response! The automation setup is working perfectly.',
-      time: '4 hours ago',
-      status: 'read',
-      platform: 'instagram'
+      sender: "Mike Chen",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      message:
+        "Thank you for the quick response! The automation setup is working perfectly.",
+      time: "4 hours ago",
+      status: "read",
+      platform: "instagram",
     },
     {
       id: 3,
-      sender: 'Emma Davis',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-      message: 'When will the new features be available? I\'ve been waiting for the advanced analytics.',
-      time: '1 day ago',
-      status: 'replied',
-      platform: 'instagram'
-    }
+      sender: "Emma Davis",
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+      message:
+        "When will the new features be available? I've been waiting for the advanced analytics.",
+      time: "1 day ago",
+      status: "replied",
+      platform: "instagram",
+    },
   ]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'unread': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-      case 'read': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      case 'replied': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
-      default: return 'bg-gray-100 text-gray-800';
+      case "unread":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+      case "read":
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      case "replied":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'unread': return <MessageCircle className="w-4 h-4" />;
-      case 'read': return <CheckCircle2 className="w-4 h-4" />;
-      case 'replied': return <Reply className="w-4 h-4" />;
-      default: return <MessageCircle className="w-4 h-4" />;
+      case "unread":
+        return <MessageCircle className="w-4 h-4" />;
+      case "read":
+        return <CheckCircle2 className="w-4 h-4" />;
+      case "replied":
+        return <Reply className="w-4 h-4" />;
+      default:
+        return <MessageCircle className="w-4 h-4" />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
+
       <div className="lg:ml-64">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage conversations with your audience</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Messages
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage conversations with your audience
+                </p>
               </div>
               <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <Send className="w-4 h-4 mr-2" />
@@ -96,44 +114,60 @@ const Messages = () => {
                   <MessageCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Messages</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">2,847</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Messages
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    2,847
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
               <div className="flex items-center">
                 <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Unread</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">23</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Unread
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    23
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
               <div className="flex items-center">
                 <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
                   <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Response Rate</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">94.5%</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Response Rate
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    94.5%
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
               <div className="flex items-center">
                 <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Response Time</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">2.4h</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Avg. Response Time
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    2.4h
+                  </p>
                 </div>
               </div>
             </div>
@@ -166,13 +200,15 @@ const Messages = () => {
           {/* Messages List */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Conversations</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Recent Conversations
+              </h3>
             </div>
-            
+
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {messages.map((message) => (
-                <div 
-                  key={message.id} 
+                <div
+                  key={message.id}
                   className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                   onClick={() => setSelectedMessage(message)}
                 >
@@ -188,13 +224,19 @@ const Messages = () => {
                           <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                             {message.sender}
                           </h4>
-                          <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(message.status)}`}>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                              message.status
+                            )}`}
+                          >
                             {getStatusIcon(message.status)}
                             <span className="ml-1">{message.status}</span>
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{message.time}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {message.time}
+                          </span>
                           <button className="text-gray-400 hover:text-yellow-500">
                             <Star className="w-4 h-4" />
                           </button>
@@ -232,7 +274,9 @@ const Messages = () => {
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {selectedMessage.sender}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{selectedMessage.time}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {selectedMessage.time}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -246,7 +290,9 @@ const Messages = () => {
                 <div className="p-6">
                   <div className="space-y-4">
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                      <p className="text-gray-900 dark:text-white">{selectedMessage.message}</p>
+                      <p className="text-gray-900 dark:text-white">
+                        {selectedMessage.message}
+                      </p>
                     </div>
                     <div className="flex space-x-3">
                       <Button className="flex-1">

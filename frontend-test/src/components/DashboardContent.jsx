@@ -1,7 +1,7 @@
 import React from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useUserData } from "@/hooks/useUserData";
-import { generateInstagramOAuthUrl } from "@/lib/instagram";
+import { getInstagramOAuthUrl } from "@/lib/instagram";
 import {
   Card,
   CardContent,
@@ -45,10 +45,15 @@ const DashboardContent = () => {
   } = useUserData();
 
   // Handle Instagram connection redirect
-  const handleConnectInstagram = () => {
-    // Redirect to Instagram Business OAuth URL using utility function
-    const instagramOAuthUrl = generateInstagramOAuthUrl();
-    window.location.href = instagramOAuthUrl;
+  const handleConnectInstagram = async () => {
+    try {
+      // Get Instagram OAuth URL from backend endpoint
+      const instagramOAuthUrl = await getInstagramOAuthUrl();
+      window.location.href = instagramOAuthUrl;
+    } catch (error) {
+      console.error("Failed to initiate Instagram OAuth:", error);
+      // Could show an error toast here
+    }
   };
 
   // Skeleton Loading Component

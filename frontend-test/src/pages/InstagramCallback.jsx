@@ -11,7 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import api from "@/lib/api";
-import { generateInstagramOAuthUrl } from "@/lib/instagram";
+import { generateInstagramOAuthUrl, getInstagramOAuthUrl } from "@/lib/instagram";
 
 const InstagramCallback = () => {
   const [searchParams] = useSearchParams();
@@ -156,8 +156,14 @@ const InstagramCallback = () => {
                     Back to Dashboard
                   </Button>
                   <Button
-                    onClick={() => {
-                      window.location.href = generateInstagramOAuthUrl();
+                    onClick={async () => {
+                      try {
+                        const oauthUrl = await getInstagramOAuthUrl();
+                        window.location.href = oauthUrl;
+                      } catch (error) {
+                        // Fallback to hardcoded URL
+                        window.location.href = generateInstagramOAuthUrl();
+                      }
                     }}
                     variant="outline"
                     className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"

@@ -7,6 +7,7 @@ import TestPage from '@/pages/TestPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import SignupPage from '@/pages/auth/SignupPage'
 import InstagramCallback from '@/pages/InstagramCallback'
+import AuthHandler from '@/components/AuthHandler'
 
 // Import Clerk publishable key from environment variables
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -17,13 +18,22 @@ if (!clerkPubKey) {
 
 function App() {
   return (
-    <ClerkProvider publishableKey={clerkPubKey}>
+    <ClerkProvider 
+      publishableKey={clerkPubKey}
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/dashboard"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+    >
       <Router>
         <div className="min-h-screen bg-background text-foreground">
           <Routes>
+            {/* Root route with authentication handling */}
+            <Route path="/" element={<AuthHandler />} />
+            
             {/* Public Routes */}
             <Route 
-              path="/login" 
+              path="/sign-in" 
               element={
                 <SignedOut>
                   <LoginPage />
@@ -31,13 +41,17 @@ function App() {
               } 
             />
             <Route 
-              path="/signup" 
+              path="/sign-up" 
               element={
                 <SignedOut>
                   <SignupPage />
                 </SignedOut>
               } 
             />
+            
+            {/* Legacy routes for backward compatibility */}
+            <Route path="/login" element={<Navigate to="/sign-in" replace />} />
+            <Route path="/signup" element={<Navigate to="/sign-up" replace />} />
             
             {/* Instagram OAuth Callback - Can be accessed by authenticated users */}
             <Route 
@@ -51,32 +65,91 @@ function App() {
             
             {/* Protected Routes */}
             <Route 
-              path="/*" 
+              path="/dashboard" 
               element={
                 <SignedIn>
                   <DashboardLayout>
-                    <Routes>
-                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                      <Route path="/dashboard" element={<DashboardOverview />} />
-                      <Route path="/test" element={<TestPage />} />
-                      <Route path="/automation" element={<div className="text-center py-12">Automation page coming soon...</div>} />
-                      <Route path="/analytics" element={<div className="text-center py-12">Analytics page coming soon...</div>} />
-                      <Route path="/posts" element={<div className="text-center py-12">Posts page coming soon...</div>} />
-                      <Route path="/webhooks" element={<div className="text-center py-12">Webhooks page coming soon...</div>} />
-                      <Route path="/settings" element={<div className="text-center py-12">Settings page coming soon...</div>} />
-                    </Routes>
+                    <DashboardOverview />
                   </DashboardLayout>
                 </SignedIn>
               } 
             />
+            <Route 
+              path="/test" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <TestPage />
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            <Route 
+              path="/automation" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <div className="text-center py-12">Automation page coming soon...</div>
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <div className="text-center py-12">Analytics page coming soon...</div>
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            <Route 
+              path="/posts" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <div className="text-center py-12">Posts page coming soon...</div>
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            <Route 
+              path="/webhooks" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <div className="text-center py-12">Webhooks page coming soon...</div>
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <SignedIn>
+                  <DashboardLayout>
+                    <div className="text-center py-12">Settings page coming soon...</div>
+                  </DashboardLayout>
+                </SignedIn>
+              } 
+            />
+            
+            {/* Catch all route - redirect unauthenticated users to login */}
+            <Route 
+              path="*" 
+              element={
+                <>
+                  <SignedIn>
+                    <Navigate to="/dashboard" replace />
+                  </SignedIn>
+                  <SignedOut>
+                    <Navigate to="/sign-in" replace />
+                  </SignedOut>
+                </>
+              } 
+            />
           </Routes>
-          
-          {/* Redirect unauthenticated users to login */}
-          <SignedOut>
-            <Routes>
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </SignedOut>
         </div>
       </Router>
     </ClerkProvider>

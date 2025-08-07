@@ -1,7 +1,7 @@
 import http from "http";
 import app from "./app.js";
 import { connectDB, disconnectDB } from "./src/database/connection.js";
-import { config } from "./src/config/index.js";
+import { enhancedConfig as config } from "./src/config/index.js";
 
 const PORT = config.PORT || 5001;
 const HOST = config.HOST || "0.0.0.0";

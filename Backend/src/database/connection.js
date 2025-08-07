@@ -124,39 +124,9 @@ const handleReconnection = async () => {
 };
 
 const gracefulShutdown = async () => {
-  const shutdown = async (signal) => {
-    console.info(`Received ${signal}. Initiating graceful shutdown...`);
-    process.env.SHUTDOWN_INITIATED = true;
-
-    try {
-      await mongoose.connection.close();
-      console.info("MongoDB connection closed gracefully");
-    } catch (error) {
-      console.error("Error during MongoDB shutdown:", error.message);
-    } finally {
-      process.exit(0);
-    }
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGQUIT", () => shutdown("SIGQUIT"));
-
-  process.on("uncaughtException", (error) => {
-    console.error("Uncaught Exception:", {
-      message: error.message,
-      stack: error.stack,
-    });
-    shutdown("uncaughtException");
-  });
-
-  process.on("unhandledRejection", (reason, promise) => {
-    console.error("Unhandled Rejection at:", {
-      promise: promise,
-      reason: reason,
-    });
-    shutdown("unhandledRejection");
-  });
+  // Database cleanup logic only
+  // Global process handlers are managed by server.js
+  return;
 };
 
 const connectDB = async () => {
@@ -200,8 +170,6 @@ const connectDB = async () => {
 
 const initializeDatabase = async () => {
   setUpConenectionMonitoring();
-  gracefulShutdown();
-
   return connectDB();
 };
 

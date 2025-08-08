@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
   BarChart3,
   TrendingUp,
   Eye,
@@ -25,12 +31,12 @@ import {
   Zap,
   Award,
   Star,
-  ThumbsUp
-} from 'lucide-react';
+  ThumbsUp,
+} from "lucide-react";
 
 const ContentPerformance = ({ data, dateRange }) => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
-  const [selectedContentType, setSelectedContentType] = useState('all');
+  const [selectedTimeframe, setSelectedTimeframe] = useState("7d");
+  const [selectedContentType, setSelectedContentType] = useState("all");
 
   const performanceData = {
     overview: {
@@ -39,15 +45,15 @@ const ContentPerformance = ({ data, dateRange }) => {
       totalEngagement: 184532,
       avgEngagementRate: 7.5,
       topPerformer: {
-        postId: 'post_123',
-        type: 'Reel',
+        postId: "post_123",
+        type: "Reel",
         engagement: 24.8,
-        reach: 45678
-      }
+        reach: 45678,
+      },
     },
     contentTypes: [
       {
-        type: 'Photos',
+        type: "Photos",
         count: 68,
         avgEngagement: 6.2,
         totalReach: 856234,
@@ -55,10 +61,10 @@ const ContentPerformance = ({ data, dateRange }) => {
         totalComments: 3456,
         totalShares: 1234,
         growthRate: 5.8,
-        bestTime: '12:00 PM'
+        bestTime: "12:00 PM",
       },
       {
-        type: 'Videos',
+        type: "Videos",
         count: 34,
         avgEngagement: 9.4,
         totalReach: 672145,
@@ -66,10 +72,10 @@ const ContentPerformance = ({ data, dateRange }) => {
         totalComments: 5678,
         totalShares: 2890,
         growthRate: 12.3,
-        bestTime: '6:00 PM'
+        bestTime: "6:00 PM",
       },
       {
-        type: 'Carousels',
+        type: "Carousels",
         count: 28,
         avgEngagement: 8.1,
         totalReach: 543678,
@@ -77,10 +83,10 @@ const ContentPerformance = ({ data, dateRange }) => {
         totalComments: 4123,
         totalShares: 1876,
         growthRate: 8.7,
-        bestTime: '3:00 PM'
+        bestTime: "3:00 PM",
       },
       {
-        type: 'Stories',
+        type: "Stories",
         count: 89,
         avgEngagement: 4.3,
         totalReach: 234567,
@@ -88,10 +94,10 @@ const ContentPerformance = ({ data, dateRange }) => {
         totalComments: 0,
         totalShares: 0,
         growthRate: -2.1,
-        bestTime: '9:00 AM'
+        bestTime: "9:00 AM",
       },
       {
-        type: 'Reels',
+        type: "Reels",
         count: 23,
         avgEngagement: 15.6,
         totalReach: 987654,
@@ -99,109 +105,115 @@ const ContentPerformance = ({ data, dateRange }) => {
         totalComments: 7890,
         totalShares: 4567,
         growthRate: 28.9,
-        bestTime: '7:00 PM'
-      }
+        bestTime: "7:00 PM",
+      },
     ],
     topPosts: [
       {
-        id: 'post_1',
-        type: 'Reel',
-        title: 'Morning Workout Routine',
-        thumbnail: '/api/placeholder/150/150',
-        date: '2024-01-15',
+        id: "post_1",
+        type: "Reel",
+        title: "Morning Workout Routine",
+        thumbnail: "/api/placeholder/150/150",
+        date: "2024-01-15",
         engagement: 24.8,
         reach: 45678,
         likes: 11234,
         comments: 456,
         shares: 789,
-        saves: 234
+        saves: 234,
       },
       {
-        id: 'post_2',
-        type: 'Photo',
-        title: 'Healthy Breakfast Ideas',
-        thumbnail: '/api/placeholder/150/150',
-        date: '2024-01-14',
+        id: "post_2",
+        type: "Photo",
+        title: "Healthy Breakfast Ideas",
+        thumbnail: "/api/placeholder/150/150",
+        date: "2024-01-14",
         engagement: 18.5,
         reach: 32145,
         likes: 5943,
         comments: 234,
         shares: 123,
-        saves: 567
+        saves: 567,
       },
       {
-        id: 'post_3',
-        type: 'Carousel',
-        title: 'Weekly Meal Prep Guide',
-        thumbnail: '/api/placeholder/150/150',
-        date: '2024-01-13',
+        id: "post_3",
+        type: "Carousel",
+        title: "Weekly Meal Prep Guide",
+        thumbnail: "/api/placeholder/150/150",
+        date: "2024-01-13",
         engagement: 16.2,
         reach: 28934,
         likes: 4681,
         comments: 189,
         shares: 234,
-        saves: 445
+        saves: 445,
       },
       {
-        id: 'post_4',
-        type: 'Video',
-        title: 'Yoga for Beginners',
-        thumbnail: '/api/placeholder/150/150',
-        date: '2024-01-12',
+        id: "post_4",
+        type: "Video",
+        title: "Yoga for Beginners",
+        thumbnail: "/api/placeholder/150/150",
+        date: "2024-01-12",
         engagement: 14.7,
         reach: 26789,
         likes: 3942,
         comments: 167,
         shares: 89,
-        saves: 298
+        saves: 298,
       },
       {
-        id: 'post_5',
-        type: 'Photo',
-        title: 'Motivational Monday',
-        thumbnail: '/api/placeholder/150/150',
-        date: '2024-01-11',
+        id: "post_5",
+        type: "Photo",
+        title: "Motivational Monday",
+        thumbnail: "/api/placeholder/150/150",
+        date: "2024-01-11",
         engagement: 12.3,
         reach: 24567,
         likes: 3021,
         comments: 123,
         shares: 67,
-        saves: 189
-      }
+        saves: 189,
+      },
     ],
     hashtags: [
-      { tag: '#fitness', posts: 45, avgEngagement: 8.9, reach: 234567 },
-      { tag: '#health', posts: 38, avgEngagement: 7.2, reach: 198765 },
-      { tag: '#motivation', posts: 29, avgEngagement: 9.4, reach: 176543 },
-      { tag: '#workout', posts: 33, avgEngagement: 8.1, reach: 156789 },
-      { tag: '#lifestyle', posts: 25, avgEngagement: 6.8, reach: 145632 }
+      { tag: "#fitness", posts: 45, avgEngagement: 8.9, reach: 234567 },
+      { tag: "#health", posts: 38, avgEngagement: 7.2, reach: 198765 },
+      { tag: "#motivation", posts: 29, avgEngagement: 9.4, reach: 176543 },
+      { tag: "#workout", posts: 33, avgEngagement: 8.1, reach: 156789 },
+      { tag: "#lifestyle", posts: 25, avgEngagement: 6.8, reach: 145632 },
     ],
     weeklyPerformance: [
-      { day: 'Monday', posts: 23, engagement: 8.2, reach: 45678 },
-      { day: 'Tuesday', posts: 19, engagement: 7.8, reach: 42134 },
-      { day: 'Wednesday', posts: 25, engagement: 9.1, reach: 48923 },
-      { day: 'Thursday', posts: 21, engagement: 7.5, reach: 41267 },
-      { day: 'Friday', posts: 28, engagement: 10.3, reach: 52341 },
-      { day: 'Saturday', posts: 22, engagement: 8.9, reach: 46789 },
-      { day: 'Sunday', posts: 18, engagement: 7.2, reach: 39876 }
-    ]
+      { day: "Monday", posts: 23, engagement: 8.2, reach: 45678 },
+      { day: "Tuesday", posts: 19, engagement: 7.8, reach: 42134 },
+      { day: "Wednesday", posts: 25, engagement: 9.1, reach: 48923 },
+      { day: "Thursday", posts: 21, engagement: 7.5, reach: 41267 },
+      { day: "Friday", posts: 28, engagement: 10.3, reach: 52341 },
+      { day: "Saturday", posts: 22, engagement: 8.9, reach: 46789 },
+      { day: "Sunday", posts: 18, engagement: 7.2, reach: 39876 },
+    ],
   };
 
   const getContentIcon = (type) => {
     switch (type) {
-      case 'Photos': return <Camera className="h-5 w-5" />;
-      case 'Videos': return <PlayCircle className="h-5 w-5" />;
-      case 'Carousels': return <Share2 className="h-5 w-5" />;
-      case 'Stories': return <MessageCircle className="h-5 w-5" />;
-      case 'Reels': return <PlayCircle className="h-5 w-5" />;
-      default: return <Eye className="h-5 w-5" />;
+      case "Photos":
+        return <Camera className="h-5 w-5" />;
+      case "Videos":
+        return <PlayCircle className="h-5 w-5" />;
+      case "Carousels":
+        return <Share2 className="h-5 w-5" />;
+      case "Stories":
+        return <MessageCircle className="h-5 w-5" />;
+      case "Reels":
+        return <PlayCircle className="h-5 w-5" />;
+      default:
+        return <Eye className="h-5 w-5" />;
     }
   };
 
   const getEngagementColor = (rate) => {
-    if (rate >= 10) return 'text-green-400';
-    if (rate >= 7) return 'text-yellow-400';
-    return 'text-red-400';
+    if (rate >= 10) return "text-green-400";
+    if (rate >= 7) return "text-yellow-400";
+    return "text-red-400";
   };
 
   return (
@@ -209,7 +221,7 @@ const ContentPerformance = ({ data, dateRange }) => {
       {/* Filter Controls */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center space-x-2">
-          <select 
+          <select
             className="bg-gray-800 border border-gray-600 rounded-md px-3 py-1 text-sm text-white"
             value={selectedTimeframe}
             onChange={(e) => setSelectedTimeframe(e.target.value)}
@@ -218,8 +230,8 @@ const ContentPerformance = ({ data, dateRange }) => {
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
           </select>
-          
-          <select 
+
+          <select
             className="bg-gray-800 border border-gray-600 rounded-md px-3 py-1 text-sm text-white"
             value={selectedContentType}
             onChange={(e) => setSelectedContentType(e.target.value)}
@@ -232,13 +244,21 @@ const ContentPerformance = ({ data, dateRange }) => {
             <option value="Reels">Reels</option>
           </select>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-gray-600 text-gray-300"
+          >
             <Filter className="h-4 w-4 mr-2" />
             Advanced Filters
           </Button>
-          <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-gray-600 text-gray-300"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
@@ -252,7 +272,9 @@ const ContentPerformance = ({ data, dateRange }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Total Posts</p>
-                <p className="text-2xl font-bold text-white">{performanceData.overview.totalPosts}</p>
+                <p className="text-2xl font-bold text-white">
+                  {performanceData.overview.totalPosts}
+                </p>
                 <p className="text-sm text-green-400">+12 this week</p>
               </div>
               <BarChart3 className="h-8 w-8 text-blue-400" />
@@ -284,7 +306,8 @@ const ContentPerformance = ({ data, dateRange }) => {
               <div>
                 <p className="text-sm text-gray-400">Total Engagement</p>
                 <p className="text-2xl font-bold text-white">
-                  {(performanceData.overview.totalEngagement / 1000).toFixed(0)}K
+                  {(performanceData.overview.totalEngagement / 1000).toFixed(0)}
+                  K
                 </p>
                 <div className="flex items-center text-green-400 text-sm">
                   <ArrowUp className="h-3 w-3 mr-1" />
@@ -301,7 +324,9 @@ const ContentPerformance = ({ data, dateRange }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Avg Engagement Rate</p>
-                <p className="text-2xl font-bold text-white">{performanceData.overview.avgEngagementRate}%</p>
+                <p className="text-2xl font-bold text-white">
+                  {performanceData.overview.avgEngagementRate}%
+                </p>
                 <p className="text-sm text-gray-400">Industry avg: 5.2%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-400" />
@@ -318,7 +343,9 @@ const ContentPerformance = ({ data, dateRange }) => {
               <BarChart3 className="h-5 w-5 mr-2 text-blue-400" />
               Content Type Performance
             </CardTitle>
-            <CardDescription>Performance breakdown by content type</CardDescription>
+            <CardDescription>
+              Performance breakdown by content type
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -330,12 +357,20 @@ const ContentPerformance = ({ data, dateRange }) => {
                         {getContentIcon(content.type)}
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">{content.type}</h4>
-                        <p className="text-sm text-gray-400">{content.count} posts</p>
+                        <h4 className="text-white font-medium">
+                          {content.type}
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          {content.count} posts
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-bold ${getEngagementColor(content.avgEngagement)}`}>
+                      <p
+                        className={`text-lg font-bold ${getEngagementColor(
+                          content.avgEngagement
+                        )}`}
+                      >
                         {content.avgEngagement}%
                       </p>
                       <div className="flex items-center text-sm">
@@ -344,25 +379,37 @@ const ContentPerformance = ({ data, dateRange }) => {
                         ) : (
                           <ArrowDown className="h-3 w-3 text-red-400 mr-1" />
                         )}
-                        <span className={content.growthRate > 0 ? 'text-green-400' : 'text-red-400'}>
+                        <span
+                          className={
+                            content.growthRate > 0
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }
+                        >
                           {Math.abs(content.growthRate)}%
                         </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-3 text-xs">
                     <div>
                       <span className="text-gray-400">Reach:</span>
-                      <p className="text-white font-medium">{(content.totalReach / 1000).toFixed(0)}K</p>
+                      <p className="text-white font-medium">
+                        {(content.totalReach / 1000).toFixed(0)}K
+                      </p>
                     </div>
                     <div>
                       <span className="text-gray-400">Likes:</span>
-                      <p className="text-white font-medium">{(content.totalLikes / 1000).toFixed(1)}K</p>
+                      <p className="text-white font-medium">
+                        {(content.totalLikes / 1000).toFixed(1)}K
+                      </p>
                     </div>
                     <div>
                       <span className="text-gray-400">Best Time:</span>
-                      <p className="text-white font-medium">{content.bestTime}</p>
+                      <p className="text-white font-medium">
+                        {content.bestTime}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -378,7 +425,9 @@ const ContentPerformance = ({ data, dateRange }) => {
               <Target className="h-5 w-5 mr-2 text-purple-400" />
               Top Performing Hashtags
             </CardTitle>
-            <CardDescription>Hashtags driving the most engagement</CardDescription>
+            <CardDescription>
+              Hashtags driving the most engagement
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -390,12 +439,18 @@ const ContentPerformance = ({ data, dateRange }) => {
                     </div>
                     <div>
                       <p className="text-white font-medium">{hashtag.tag}</p>
-                      <p className="text-sm text-gray-400">{hashtag.posts} posts</p>
+                      <p className="text-sm text-gray-400">
+                        {hashtag.posts} posts
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-medium">{hashtag.avgEngagement}%</p>
-                    <p className="text-sm text-gray-400">{(hashtag.reach / 1000).toFixed(0)}K reach</p>
+                    <p className="text-white font-medium">
+                      {hashtag.avgEngagement}%
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      {(hashtag.reach / 1000).toFixed(0)}K reach
+                    </p>
                   </div>
                 </div>
               ))}
@@ -411,17 +466,23 @@ const ContentPerformance = ({ data, dateRange }) => {
             <Calendar className="h-5 w-5 mr-2 text-green-400" />
             Weekly Performance Trends
           </CardTitle>
-          <CardDescription>Performance metrics by day of the week</CardDescription>
+          <CardDescription>
+            Performance metrics by day of the week
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-4">
             {performanceData.weeklyPerformance.map((day, index) => {
-              const maxReach = Math.max(...performanceData.weeklyPerformance.map(d => d.reach));
+              const maxReach = Math.max(
+                ...performanceData.weeklyPerformance.map((d) => d.reach)
+              );
               const reachPercentage = (day.reach / maxReach) * 100;
-              
+
               return (
                 <div key={index} className="text-center">
-                  <p className="text-sm text-gray-400 mb-2">{day.day.slice(0, 3)}</p>
+                  <p className="text-sm text-gray-400 mb-2">
+                    {day.day.slice(0, 3)}
+                  </p>
                   <div className="bg-gray-700 rounded-lg p-3 space-y-2">
                     <div className="bg-gray-600 rounded h-16 flex items-end justify-center">
                       <div
@@ -430,9 +491,13 @@ const ContentPerformance = ({ data, dateRange }) => {
                       />
                     </div>
                     <div className="space-y-1 text-xs">
-                      <p className="text-white font-medium">{day.posts} posts</p>
+                      <p className="text-white font-medium">
+                        {day.posts} posts
+                      </p>
                       <p className="text-gray-400">{day.engagement}% eng</p>
-                      <p className="text-gray-400">{(day.reach / 1000).toFixed(0)}K reach</p>
+                      <p className="text-gray-400">
+                        {(day.reach / 1000).toFixed(0)}K reach
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -460,60 +525,84 @@ const ContentPerformance = ({ data, dateRange }) => {
                     <div className="w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center">
                       {getContentIcon(post.type)}
                     </div>
-                    <Badge 
-                      className="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs"
-                    >
+                    <Badge className="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs">
                       #{index + 1}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-white font-medium truncate">{post.title}</h4>
+                        <h4 className="text-white font-medium truncate">
+                          {post.title}
+                        </h4>
                         <div className="flex items-center space-x-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {post.type}
                           </Badge>
-                          <span className="text-gray-400 text-sm">{post.date}</span>
+                          <span className="text-gray-400 text-sm">
+                            {post.date}
+                          </span>
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost" className="text-gray-400">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-gray-400"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3 text-sm">
                       <div>
                         <span className="text-gray-400">Engagement:</span>
-                        <p className={`font-medium ${getEngagementColor(post.engagement)}`}>
+                        <p
+                          className={`font-medium ${getEngagementColor(
+                            post.engagement
+                          )}`}
+                        >
                           {post.engagement}%
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-400">Reach:</span>
-                        <p className="text-white font-medium">{(post.reach / 1000).toFixed(0)}K</p>
+                        <p className="text-white font-medium">
+                          {(post.reach / 1000).toFixed(0)}K
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-400">Likes:</span>
-                        <p className="text-white font-medium">{(post.likes / 1000).toFixed(1)}K</p>
+                        <p className="text-white font-medium">
+                          {(post.likes / 1000).toFixed(1)}K
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-400">Comments:</span>
-                        <p className="text-white font-medium">{post.comments}</p>
+                        <p className="text-white font-medium">
+                          {post.comments}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-400">Saves:</span>
                         <p className="text-white font-medium">{post.saves}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2 mt-3">
-                      <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 text-gray-300"
+                      >
                         <Eye className="h-3 w-3 mr-1" />
                         View Details
                       </Button>
-                      <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 text-gray-300"
+                      >
                         <ExternalLink className="h-3 w-3 mr-1" />
                         View Post
                       </Button>

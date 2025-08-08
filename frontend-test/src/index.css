@@ -2,8 +2,15 @@
 
 /* Custom CSS for VibeBot */
 :root {
-  --instagram-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-  
+  --instagram-gradient: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+
   /* shadcn/ui CSS variables for dark theme */
   --background: 0 0% 3.9%;
   --foreground: 0 0% 98%;

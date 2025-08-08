@@ -9,6 +9,7 @@ import {
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardOverview from "@/pages/DashboardOverview";
 import AutomationPage from "@/pages/AutomationPage";
+import AnalyticsPage from "@/pages/AnalyticsPage";
 import TestPage from "@/pages/TestPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
@@ -108,9 +109,7 @@ function App() {
               element={
                 <SignedIn>
                   <DashboardLayout>
-                    <div className="text-center py-12">
-                      Analytics page coming soon...
-                    </div>
+                    <AnalyticsPage />
                   </DashboardLayout>
                 </SignedIn>
               }

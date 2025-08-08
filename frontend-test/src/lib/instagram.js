@@ -20,18 +20,20 @@ export const INSTAGRAM_CONFIG = {
  */
 export const getInstagramOAuthUrl = async () => {
   try {
-    const response = await fetch('https://manychat-with-ai.onrender.com/api/auth/instagram');
+    const response = await fetch(
+      "https://manychat-with-ai.onrender.com/api/auth/instagram"
+    );
     const data = await response.json();
-    
+
     if (data.success && data.authUrl) {
-      console.log('✅ Got Instagram OAuth URL from backend:', data.authUrl);
+      console.log("✅ Got Instagram OAuth URL from backend:", data.authUrl);
       return data.authUrl;
     } else {
-      throw new Error('Backend did not return OAuth URL');
+      throw new Error("Backend did not return OAuth URL");
     }
   } catch (error) {
-    console.error('❌ Failed to get Instagram OAuth URL from backend:', error);
-    console.log('🔄 Falling back to hardcoded OAuth URL...');
+    console.error("❌ Failed to get Instagram OAuth URL from backend:", error);
+    console.log("🔄 Falling back to hardcoded OAuth URL...");
     // Fallback to hardcoded URL if backend fails
     return generateInstagramOAuthUrl();
   }

@@ -1,1 +1,1 @@
-export { useUserData } from './useUserData'
+export { useUserData } from "./useUserData";

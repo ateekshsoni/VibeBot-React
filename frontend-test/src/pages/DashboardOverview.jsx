@@ -1,8 +1,8 @@
-import React from 'react'
-import DashboardContent from '@/components/DashboardContent'
+import React from "react";
+import DashboardContent from "@/components/DashboardContent";
 
 const DashboardOverview = () => {
-  return <DashboardContent />
-}
+  return <DashboardContent />;
+};
 
-export default DashboardOverview
+export default DashboardOverview;

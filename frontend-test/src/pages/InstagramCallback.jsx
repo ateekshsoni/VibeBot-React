@@ -11,7 +11,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import api from "@/lib/api";
-import { generateInstagramOAuthUrl, getInstagramOAuthUrl } from "@/lib/instagram";
+import {
+  generateInstagramOAuthUrl,
+  getInstagramOAuthUrl,
+} from "@/lib/instagram";
 
 const InstagramCallback = () => {
   const [searchParams] = useSearchParams();

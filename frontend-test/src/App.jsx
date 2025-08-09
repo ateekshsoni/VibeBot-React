@@ -10,6 +10,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardOverview from "@/pages/DashboardOverview";
 import AutomationPage from "@/pages/AutomationPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import LandingPage from "@/pages/LandingPage";
 import TestPage from "@/pages/TestPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
@@ -35,6 +36,9 @@ function App() {
       <Router>
         <div className="min-h-screen bg-background text-foreground">
           <Routes>
+            {/* Landing Page Route */}
+            <Route path="/" element={<LandingPage />} />
+
             {/* Root route with authentication handling */}
             <Route path="/" element={<AuthHandler />} />
 

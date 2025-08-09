@@ -51,6 +51,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // VibeBot Landing Page Colors
+        vibebot: {
+          gold: "#D4AF37",
+          silver: "#CFCFCF",
+          bg: "#0B0E13",
+          panel: "rgba(255,255,255,0.04)",
+          muted: "rgba(255,255,255,0.65)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -70,6 +78,13 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        'gradient': 'gradient 6s ease infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+      },
+      backgroundImage: {
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-radial': 'radial-gradient(ellipse at center, var(--tw-gradient-stops))',
       },
     },
   },

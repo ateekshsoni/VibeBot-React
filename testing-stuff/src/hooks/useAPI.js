@@ -1,54 +1,162 @@
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
+import axios from "axios";
+import { getErrorMessage, isNetworkError, isAuthError } from "../lib/api";
 
 export const useAPI = () => {
-  const { getToken } = useAuth();
-  const API_BASE_URL =
-    import.meta.env.VITE_API_URL || "https://vibeBot-v1.onrender.com/api";
+  const { getToken, signOut } = useAuth();
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://vibeBot-v1.onrender.com/api";
+
+  // Create axios instance for this hook
+  const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 30000,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add request interceptor to include auth token
+  apiClient.interceptors.request.use(
+    async (config) => {
+      try {
+        const token = await getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.error("Failed to get auth token:", error);
+      }
+      
+      // Add request timestamp for performance monitoring
+      config.metadata = { startTime: new Date() };
+      return config;
+    },
+    (error) => {
+      console.error("Request interceptor error:", error);
+      return Promise.reject(error);
+    }
+  );
+
+  // Add response interceptor for error handling
+  apiClient.interceptors.response.use(
+    (response) => {
+      // Log successful requests in development
+      if (import.meta.env.NODE_ENV === "development") {
+        const duration = new Date() - response.config.metadata.startTime;
+        console.log(`✅ API Success [${response.config.method?.toUpperCase()}] ${response.config.url} (${duration}ms)`);
+      }
+      return response;
+    },
+    async (error) => {
+      // Enhanced error handling
+      if (error.config) {
+        const duration = new Date() - error.config.metadata.startTime;
+        console.error(`❌ API Error [${error.config.method?.toUpperCase()}] ${error.config.url} (${duration}ms):`, error.response?.data || error.message);
+      }
+
+      // Handle authentication errors
+      if (isAuthError(error)) {
+        console.warn("Authentication failed - signing out user");
+        try {
+          await signOut();
+        } catch (signOutError) {
+          console.error("Failed to sign out:", signOutError);
+        }
+        // Don't show toast for auth errors as sign out will redirect
+        return Promise.reject(error);
+      }
+
+      // Show user-friendly error messages
+      const message = getErrorMessage(error);
+      
+      // Don't show toast for network errors in certain cases
+      if (!isNetworkError(error) || error.config?.method !== 'get') {
+        toast.error(message);
+      }
+
+      return Promise.reject(error);
+    }
+  );
 
   const apiCall = async (endpoint, options = {}) => {
     try {
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await apiClient({
+        url: endpoint,
         ...options,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      return response.json();
+      return response.data;
     } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
+      // Re-throw with additional context
+      throw {
+        ...error,
+        endpoint,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  };
 
-      // Don't show toast for 401 errors (handled by auth system)
-      if (!error.message?.includes("401")) {
-        toast.error(error.message || "Something went wrong");
-      }
+  // HTTP method helpers
+  const get = async (endpoint, params = {}) => {
+    return apiCall(endpoint, {
+      method: "GET",
+      params,
+    });
+  };
 
+  const post = async (endpoint, data = {}) => {
+    return apiCall(endpoint, {
+      method: "POST",
+      data,
+    });
+  };
+
+  const put = async (endpoint, data = {}) => {
+    return apiCall(endpoint, {
+      method: "PUT", 
+      data,
+    });
+  };
+
+  const patch = async (endpoint, data = {}) => {
+    return apiCall(endpoint, {
+      method: "PATCH",
+      data,
+    });
+  };
+
+  const del = async (endpoint) => {
+    return apiCall(endpoint, {
+      method: "DELETE",
+    });
+  };
+
+  // Health check method
+  const healthCheck = async () => {
+    try {
+      const response = await apiClient({
+        url: "/health",
+        method: "GET",
+        baseURL: API_BASE_URL.replace('/api', ''), // Remove /api for health endpoint
+        timeout: 10000,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Health check failed:", error);
       throw error;
     }
   };
 
-  const get = (endpoint) => apiCall(endpoint);
-  const post = (endpoint, data) =>
-    apiCall(endpoint, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  const put = (endpoint, data) =>
-    apiCall(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  const del = (endpoint) => apiCall(endpoint, { method: "DELETE" });
-
-  return { apiCall, get, post, put, del };
+  return { 
+    apiCall, 
+    get, 
+    post, 
+    put, 
+    patch, 
+    del, 
+    healthCheck,
+    // Expose the axios instance for advanced usage
+    client: apiClient,
+  };
 };

@@ -29,8 +29,11 @@ const Hero = () => {
   const [email, setEmail] = useState('');
 
   const handleGetStarted = () => {
-    // Navigate to sign up page
-    window.location.href = '/sign-up';
+    // Use React Router navigation instead of window.location
+    const currentPath = window.location.pathname;
+    if (currentPath === '/') {
+      window.location.href = '/sign-up';
+    }
   };
 
   const handleViewFeatures = () => {

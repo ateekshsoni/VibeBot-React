@@ -70,12 +70,25 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           // Handle unauthorized access
-          console.warn("Unauthorized access - redirecting to sign-in");
-          if (
-            typeof window !== "undefined" &&
-            !window.location.pathname.includes("sign-in")
-          ) {
-            window.location.href = "/sign-in";
+          console.warn("Unauthorized access detected");
+          
+          // Only redirect if we're actually on a protected route and not during initial auth flow
+          if (typeof window !== "undefined") {
+            const currentPath = window.location.pathname;
+            
+            // Don't redirect if:
+            // 1. Already on auth pages
+            // 2. On landing page
+            // 3. During initial load (within first 5 seconds of page load)
+            const isOnAuthPage = ['/sign-in', '/sign-up', '/signup', '/'].includes(currentPath);
+            const isRecentPageLoad = (Date.now() - window.performance.timing.navigationStart) < 5000;
+            
+            if (!isOnAuthPage && !isRecentPageLoad) {
+              console.warn("Redirecting to sign-in due to 401 on protected route:", currentPath);
+              window.location.href = "/sign-in";
+            } else {
+              console.log("Skipping redirect - on auth page or recent page load");
+            }
           }
           break;
         case 403:

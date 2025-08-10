@@ -113,21 +113,24 @@ export const useBackendSync = () => {
   // Auto-sync when user is loaded
   useEffect(() => {
     if (isLoaded && isSignedIn && clerkUser && !isBackendSynced && !syncLoading) {
-      // Add a small delay to prevent conflicts with Clerk's internal processes
+      // Add a longer delay to prevent conflicts with Clerk's internal processes and redirects
       const timer = setTimeout(() => {
-        // First check backend health, then sync user
-        checkBackendHealth().then((isHealthy) => {
-          if (isHealthy !== null) {
-            // Only attempt sync if backend is healthy
-            syncUserWithBackend();
-          } else {
-            console.warn("⚠️ Backend unhealthy - skipping user sync");
-            setBackendConnected(false);
-            // Still mark as "synced" to allow app to function
-            setIsBackendSynced(true);
-          }
-        });
-      }, 500); // Small delay to avoid conflicts
+        // Double-check user is still signed in before attempting sync
+        if (isSignedIn && clerkUser) {
+          // First check backend health, then sync user
+          checkBackendHealth().then((isHealthy) => {
+            if (isHealthy !== null) {
+              // Only attempt sync if backend is healthy
+              syncUserWithBackend();
+            } else {
+              console.warn("⚠️ Backend unhealthy - skipping user sync");
+              setBackendConnected(false);
+              // Still mark as "synced" to allow app to function
+              setIsBackendSynced(true);
+            }
+          });
+        }
+      }, 2000); // Increased delay to 2 seconds to avoid conflicts with auth flow
 
       return () => clearTimeout(timer);
     }

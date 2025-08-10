@@ -25,8 +25,8 @@ const DashboardWrapper = ({ children }) => {
     return null;
   }
 
-  // Show sync loading for a short time, then continue even if backend fails
-  if (syncLoading && backendConnected) {
+  // Show sync loading for a limited time, then continue even if backend fails
+  if (syncLoading && backendConnected && !syncError) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">

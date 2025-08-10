@@ -9,7 +9,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import DashboardLayout from "./components/layout/DashboardLayout";
+import DashboardWrapper from "./components/DashboardWrapper";
 import DashboardOverview from "./pages/DashboardOverview";
 import AutomationPage from "./pages/AutomationPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -31,7 +31,8 @@ if (!clerkPubKey) {
 
 // Environment-based configuration
 const isProduction = import.meta.env.VITE_APP_ENV === "production";
-const frontendUrl = import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
+const frontendUrl =
+  import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
 
 // Warn about test environment in production
 if (clerkPubKey.includes("test") && isProduction) {
@@ -63,9 +64,12 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
           <div className="bg-gray-800 rounded-lg p-8 text-center text-white max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4 text-red-400">Something went wrong</h2>
+            <h2 className="text-2xl font-bold mb-4 text-red-400">
+              Something went wrong
+            </h2>
             <p className="mb-6 text-gray-300">
-              An unexpected error occurred. Please refresh the page or try again later.
+              An unexpected error occurred. Please refresh the page or try again
+              later.
             </p>
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
@@ -87,7 +91,6 @@ function App() {
     <ErrorBoundary>
       <ClerkProvider
         publishableKey={clerkPubKey}
-        navigate={(to) => (window.location.href = to)}
         domain={isProduction ? frontendUrl.replace("https://", "") : undefined}
         signInUrl={import.meta.env.VITE_CLERK_SIGN_IN_URL || "/sign-in"}
         signUpUrl={import.meta.env.VITE_CLERK_SIGN_UP_URL || "/sign-up"}
@@ -105,15 +108,39 @@ function App() {
               <Route path="/" element={<LandingPage />} />
 
               {/* Public Routes */}
-              <Route path="/sign-in" element={<ClerkLoginPage />} />
-              <Route path="/sign-up" element={<ClerkSignupPage />} />
-              <Route path="/signup" element={<ClerkSignupPage />} />
+              <Route
+                path="/sign-in"
+                element={
+                  <SignedOut>
+                    <ClerkLoginPage />
+                  </SignedOut>
+                }
+              />
+              <Route
+                path="/sign-up"
+                element={
+                  <SignedOut>
+                    <ClerkSignupPage />
+                  </SignedOut>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <SignedOut>
+                    <ClerkSignupPage />
+                  </SignedOut>
+                }
+              />
 
               {/* Backend Test Route */}
               <Route path="/backend-test" element={<BackendTestComponent />} />
 
               {/* Legacy routes for backward compatibility */}
-              <Route path="/login" element={<Navigate to="/sign-in" replace />} />
+              <Route
+                path="/login"
+                element={<Navigate to="/sign-in" replace />}
+              />
 
               {/* Instagram OAuth Callback - Can be accessed by authenticated users */}
               <Route
@@ -136,9 +163,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <DashboardOverview />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -151,9 +178,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <TestPage />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -166,9 +193,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <AutomationPage />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -181,9 +208,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <AnalyticsPage />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -196,9 +223,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <SchemaVisualizerPage />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -211,9 +238,9 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <ProjectDocumentationPage />
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -226,12 +253,16 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">Posts Management</h2>
-                          <p className="text-gray-600">Posts page coming soon...</p>
+                          <h2 className="text-2xl font-semibold mb-4">
+                            Posts Management
+                          </h2>
+                          <p className="text-gray-600">
+                            Posts page coming soon...
+                          </p>
                         </div>
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -244,12 +275,16 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">Webhooks Configuration</h2>
-                          <p className="text-gray-600">Webhooks page coming soon...</p>
+                          <h2 className="text-2xl font-semibold mb-4">
+                            Webhooks Configuration
+                          </h2>
+                          <p className="text-gray-600">
+                            Webhooks page coming soon...
+                          </p>
                         </div>
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -262,12 +297,16 @@ function App() {
                 element={
                   <>
                     <SignedIn>
-                      <DashboardLayout>
+                      <DashboardWrapper>
                         <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">Account Settings</h2>
-                          <p className="text-gray-600">Settings page coming soon...</p>
+                          <h2 className="text-2xl font-semibold mb-4">
+                            Account Settings
+                          </h2>
+                          <p className="text-gray-600">
+                            Settings page coming soon...
+                          </p>
                         </div>
-                      </DashboardLayout>
+                      </DashboardWrapper>
                     </SignedIn>
                     <SignedOut>
                       <Navigate to="/sign-in" replace />
@@ -276,7 +315,7 @@ function App() {
                 }
               />
 
-              {/* Catch all route - redirect unauthenticated users to login */}
+              {/* Catch all route - redirect to appropriate location */}
               <Route
                 path="*"
                 element={
@@ -285,7 +324,7 @@ function App() {
                       <Navigate to="/dashboard" replace />
                     </SignedIn>
                     <SignedOut>
-                      <Navigate to="/sign-in" replace />
+                      <Navigate to="/" replace />
                     </SignedOut>
                   </>
                 }
@@ -299,18 +338,18 @@ function App() {
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#374151',
-                color: '#fff',
-                borderRadius: '8px',
+                background: "#374151",
+                color: "#fff",
+                borderRadius: "8px",
               },
               success: {
                 style: {
-                  background: '#10B981',
+                  background: "#10B981",
                 },
               },
               error: {
                 style: {
-                  background: '#EF4444',
+                  background: "#EF4444",
                 },
               },
             }}

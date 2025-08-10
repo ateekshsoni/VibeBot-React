@@ -1,119 +1,195 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useAPI } from "../hooks/useAPI";
+import { toast } from "react-hot-toast";
 import {
-  Instagram,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  ArrowLeft,
-} from "lucide-react";
-import api from "@/lib/api";
-import {
+  parseInstagramCallback,
+  getInstagramErrorMessage,
   generateInstagramOAuthUrl,
   getInstagramOAuthUrl,
-} from "@/lib/instagram";
+  validateOAuthState,
+} from "../lib/instagram";
 
 const InstagramCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { getToken } = useAuth();
+  const { user } = useAuth();
+  const { post } = useAPI();
 
   const [status, setStatus] = useState("loading"); // loading, success, error
   const [message, setMessage] = useState("Processing Instagram connection...");
+  const [details, setDetails] = useState(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const code = searchParams.get("code");
-        const error = searchParams.get("error");
+        // Parse callback parameters
+        const callbackData = parseInstagramCallback(searchParams);
+        
+        console.log("Instagram callback data:", callbackData);
 
-        if (error) {
+        if (callbackData.hasError) {
+          const errorMessage = getInstagramErrorMessage(
+            callbackData.error, 
+            callbackData.errorDescription
+          );
           setStatus("error");
-          setMessage(`Instagram authorization failed: ${error}`);
+          setMessage(errorMessage);
+          setDetails({
+            error: callbackData.error,
+            description: callbackData.errorDescription
+          });
+          toast.error("Instagram connection failed");
           return;
         }
 
-        if (!code) {
+        if (!callbackData.hasCode) {
           setStatus("error");
           setMessage("No authorization code received from Instagram");
+          toast.error("Invalid callback - no authorization code");
           return;
         }
 
-        // Send the code to your backend
-        const token = await getToken();
-        const response = await api.post(
-          "/integrations/instagram/callback",
-          {
-            code: code,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
+        // Validate state parameter if present
+        if (callbackData.state && user) {
+          const isValidState = validateOAuthState(callbackData.state, user.id);
+          if (!isValidState) {
+            setStatus("error");
+            setMessage("Invalid state parameter - possible security issue");
+            toast.error("Security validation failed");
+            return;
           }
-        );
+        }
 
-        if (response.data.success) {
+        setMessage("Exchanging authorization code...");
+
+        // Send the code to backend for token exchange
+        const response = await post("/auth/instagram/callback", {
+          code: callbackData.code,
+          state: callbackData.state,
+          redirectUri: "https://vibeBot-v1.onrender.com/api/auth/instagram/callback",
+          metadata: {
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+            origin: window.location.origin
+          }
+        });
+
+        if (response.success || response.data?.success) {
+          const connectionData = response.data || response;
           setStatus("success");
           setMessage("Instagram account connected successfully!");
+          setDetails({
+            username: connectionData.username,
+            accountType: connectionData.accountType,
+            followers: connectionData.followers
+          });
+          
+          toast.success(`Connected to @${connectionData.username || 'Instagram'}`);
 
-          // Redirect to dashboard after 2 seconds
+          // Redirect to dashboard after 3 seconds
           setTimeout(() => {
-            navigate("/dashboard");
-          }, 2000);
+            navigate("/dashboard", { replace: true });
+          }, 3000);
         } else {
           setStatus("error");
-          setMessage(
-            response.data.message || "Failed to connect Instagram account"
-          );
+          setMessage(response.message || "Failed to connect Instagram account");
+          toast.error("Connection failed");
         }
-      } catch (err) {
-        console.error("Instagram callback error:", err);
+      } catch (error) {
+        console.error("Instagram callback error:", error);
+        
+        let errorMessage = "Failed to process Instagram connection";
+        
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.isNetworkError) {
+          errorMessage = "Network error - please check your connection";
+        } else if (error.statusCode === 400) {
+          errorMessage = "Invalid authorization code or request";
+        } else if (error.statusCode === 401) {
+          errorMessage = "Authentication required - please sign in again";
+        }
+        
         setStatus("error");
-        setMessage(
-          err.response?.data?.message ||
-            "Failed to process Instagram connection"
-        );
+        setMessage(errorMessage);
+        setDetails({
+          error: error.response?.data?.error || error.message,
+          statusCode: error.statusCode
+        });
+        
+        toast.error("Instagram connection failed");
       }
     };
 
     handleCallback();
-  }, [searchParams, getToken, navigate]);
+  }, [searchParams, user, post, navigate]);
 
   const getStatusIcon = () => {
     switch (status) {
       case "loading":
-        return <Loader2 className="h-12 w-12 animate-spin text-blue-500" />;
+        return (
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        );
       case "success":
-        return <CheckCircle2 className="h-12 w-12 text-green-500" />;
+        return (
+          <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center">
+            <span className="text-white text-2xl">✓</span>
+          </div>
+        );
       case "error":
-        return <XCircle className="h-12 w-12 text-red-500" />;
+        return (
+          <div className="h-12 w-12 rounded-full bg-red-600 flex items-center justify-center">
+            <span className="text-white text-2xl">✗</span>
+          </div>
+        );
       default:
-        return <Instagram className="h-12 w-12 text-gray-500" />;
+        return (
+          <div className="h-12 w-12 rounded-full bg-gray-600 flex items-center justify-center">
+            <span className="text-white text-2xl">📱</span>
+          </div>
+        );
     }
   };
 
   const getStatusColor = () => {
     switch (status) {
       case "loading":
-        return "border-blue-500";
+        return "border-blue-600";
       case "success":
-        return "border-green-500";
+        return "border-green-600";
       case "error":
-        return "border-red-500";
+        return "border-red-600";
       default:
-        return "border-gray-500";
+        return "border-gray-600";
+    }
+  };
+
+  const tryAgain = async () => {
+    try {
+      setStatus("loading");
+      setMessage("Getting new authorization URL...");
+      
+      const oauthUrl = await getInstagramOAuthUrl();
+      window.location.href = oauthUrl;
+    } catch (error) {
+      console.error("Failed to get OAuth URL:", error);
+      // Fallback to hardcoded URL
+      const fallbackUrl = generateInstagramOAuthUrl({
+        state: user ? `${user.id}_${Date.now()}_retry` : undefined
+      });
+      window.location.href = fallbackUrl;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md">
-        {/* Logo & Title */}
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-500 mb-4 shadow-2xl">
-            <Instagram className="h-8 w-8 text-white" />
+            <span className="text-white text-2xl">📱</span>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
             Instagram Connection
@@ -124,10 +200,8 @@ const InstagramCallback = () => {
         </div>
 
         {/* Status Card */}
-        <Card
-          className={`bg-gray-800/50 border-gray-700 backdrop-blur-xl shadow-2xl border-l-4 ${getStatusColor()}`}
-        >
-          <CardContent className="p-8 text-center space-y-6">
+        <div className={`bg-gray-800 rounded-lg shadow-xl border-l-4 ${getStatusColor()}`}>
+          <div className="p-8 text-center space-y-6">
             {/* Status Icon */}
             <div className="flex justify-center">{getStatusIcon()}</div>
 
@@ -139,6 +213,43 @@ const InstagramCallback = () => {
                 {status === "error" && "Connection Failed"}
               </h2>
               <p className="text-gray-400 text-sm">{message}</p>
+              
+              {/* Additional details */}
+              {details && status === "success" && (
+                <div className="bg-green-900 rounded-lg p-4 mt-4">
+                  <p className="text-green-300 text-sm">
+                    <strong>Account:</strong> @{details.username}
+                  </p>
+                  {details.accountType && (
+                    <p className="text-green-300 text-sm">
+                      <strong>Type:</strong> {details.accountType}
+                    </p>
+                  )}
+                  {details.followers && (
+                    <p className="text-green-300 text-sm">
+                      <strong>Followers:</strong> {details.followers.toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {details && status === "error" && (
+                <div className="bg-red-900 rounded-lg p-4 mt-4">
+                  <p className="text-red-300 text-sm">
+                    <strong>Error:</strong> {details.error}
+                  </p>
+                  {details.description && (
+                    <p className="text-red-300 text-sm">
+                      <strong>Details:</strong> {details.description}
+                    </p>
+                  )}
+                  {details.statusCode && (
+                    <p className="text-red-300 text-sm">
+                      <strong>Status Code:</strong> {details.statusCode}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -151,45 +262,47 @@ const InstagramCallback = () => {
 
               {status === "error" && (
                 <div className="space-y-3">
-                  <Button
-                    onClick={() => navigate("/dashboard")}
-                    className="w-full bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600"
+                  <button
+                    onClick={() => navigate("/dashboard", { replace: true })}
+                    className="w-full bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Dashboard
-                  </Button>
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const oauthUrl = await getInstagramOAuthUrl();
-                        window.location.href = oauthUrl;
-                      } catch (error) {
-                        // Fallback to hardcoded URL
-                        window.location.href = generateInstagramOAuthUrl();
-                      }
-                    }}
-                    variant="outline"
-                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                    ← Back to Dashboard
+                  </button>
+                  <button
+                    onClick={tryAgain}
+                    className="w-full border border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    <Instagram className="mr-2 h-4 w-4" />
-                    Try Again
-                  </Button>
+                    📱 Try Again
+                  </button>
                 </div>
               )}
 
               {status === "loading" && (
-                <Button
-                  onClick={() => navigate("/dashboard")}
-                  variant="outline"
-                  className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                <button
+                  onClick={() => navigate("/dashboard", { replace: true })}
+                  className="w-full border border-gray-600 text-gray-300 hover:bg-gray-700 px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
+                  ← Cancel
+                </button>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Debug info in development */}
+        {import.meta.env.NODE_ENV === "development" && (
+          <div className="mt-6 bg-gray-800 rounded-lg p-4">
+            <h3 className="text-white font-medium mb-2">Debug Info:</h3>
+            <pre className="text-gray-400 text-xs overflow-auto">
+              {JSON.stringify({
+                searchParams: Object.fromEntries(searchParams),
+                status,
+                details,
+                user: user ? { id: user.id, email: user.emailAddresses[0]?.emailAddress } : null
+              }, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     </div>
   );

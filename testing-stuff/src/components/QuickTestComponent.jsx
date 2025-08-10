@@ -8,9 +8,8 @@ const QuickTestComponent = () => {
 
   const testHealth = async () => {
     try {
-      const response = await fetch('https://vibeBot-v1.onrender.com/health');
-      const data = await response.json();
-      console.log('✅ Backend Health:', data);
+      const response = await get('/health');
+      console.log('✅ Backend Health:', response);
       return true;
     } catch (error) {
       console.error('❌ Backend Health Failed:', error);

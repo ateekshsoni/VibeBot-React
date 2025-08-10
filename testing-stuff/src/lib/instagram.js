@@ -3,7 +3,7 @@
 export const INSTAGRAM_CONFIG = {
   CLIENT_ID: "1807810336807413",
   REDIRECT_URI:
-    "https://manychat-with-ai.onrender.com/api/integrations/instagram/callback",
+    "https://vibeBot-v1.onrender.com/api/integrations/instagram/callback",
   SCOPES: [
     "instagram_business_basic",
     "instagram_business_manage_messages",
@@ -21,7 +21,7 @@ export const INSTAGRAM_CONFIG = {
 export const getInstagramOAuthUrl = async () => {
   try {
     const response = await fetch(
-      "https://manychat-with-ai.onrender.com/api/auth/instagram"
+      `${import.meta.env.VITE_API_URL}/auth/instagram`
     );
     const data = await response.json();
 

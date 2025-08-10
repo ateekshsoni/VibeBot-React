@@ -1,6 +1,7 @@
 import React from "react";
 import ClerkSignupPage from "./pages/auth/ClerkSignupPage";
 import ClerkLoginPage from "./pages/auth/ClerkLoginPage";
+import ClerkRedirectHandler from "./components/ClerkRedirectHandler";
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import {
   BrowserRouter as Router,
@@ -94,16 +95,23 @@ function App() {
         domain={isProduction ? frontendUrl.replace("https://", "") : undefined}
         signInUrl={import.meta.env.VITE_CLERK_SIGN_IN_URL || "/sign-in"}
         signUpUrl={import.meta.env.VITE_CLERK_SIGN_UP_URL || "/sign-up"}
-        afterSignInUrl={
+        signInFallbackRedirectUrl={
           import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard"
         }
-        afterSignUpUrl={
+        signUpFallbackRedirectUrl={
+          import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || "/dashboard"
+        }
+        signInForceRedirectUrl={
+          import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard"
+        }
+        signUpForceRedirectUrl={
           import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || "/dashboard"
         }
       >
         <Router>
-          <div className="min-h-screen bg-background text-foreground">
-            <Routes>
+          <ClerkRedirectHandler>
+            <div className="min-h-screen bg-background text-foreground">
+              <Routes>
               {/* Landing Page Route */}
               <Route path="/" element={<LandingPage />} />
 
@@ -329,8 +337,9 @@ function App() {
                   </>
                 }
               />
-            </Routes>
-          </div>
+              </Routes>
+            </div>
+          </ClerkRedirectHandler>
 
           {/* Toast notifications */}
           <Toaster

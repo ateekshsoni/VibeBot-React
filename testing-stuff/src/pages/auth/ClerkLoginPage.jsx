@@ -1,22 +1,20 @@
 import React from "react";
 import { SignIn, useUser, useAuth } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
 
 const ClerkLoginPage = () => {
   const { user, isLoaded: userLoaded } = useUser();
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
-  const navigate = useNavigate();
 
   // Wait for both auth and user to load
   const isLoaded = authLoaded && userLoaded;
 
-  // Only redirect if fully authenticated
-  React.useEffect(() => {
-    if (isLoaded && isSignedIn && user) {
-      console.log("✅ User authenticated, redirecting to dashboard");
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isLoaded, isSignedIn, user, navigate]);
+  // Let Clerk handle redirects with forceRedirectUrl - remove manual navigation
+  // React.useEffect(() => {
+  //   if (isLoaded && isSignedIn && user) {
+  //     console.log("✅ User authenticated, redirecting to dashboard");
+  //     navigate("/dashboard", { replace: true });
+  //   }
+  // }, [isLoaded, isSignedIn, user, navigate]);
 
   // Show loading state while checking authentication
   if (!isLoaded) {
@@ -30,7 +28,7 @@ const ClerkLoginPage = () => {
     );
   }
 
-  // If user is already signed in, show redirect message
+  // If user is already signed in, let Clerk handle the redirect
   if (isSignedIn && user) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">

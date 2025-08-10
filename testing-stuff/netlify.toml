@@ -1,0 +1,42 @@
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Directory with the static files
+  publish = "dist"
+
+[[redirects]]
+  # Redirect all requests to index.html for SPA routing
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  # Define which paths this rule should apply to
+  for = "/*"
+
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Cache control for static assets
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  # Different cache control for HTML files
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  # Cache control for API calls
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Environment variables (you'll need to set these in Netlify dashboard)
+[build.environment]
+  NODE_VERSION = "18"

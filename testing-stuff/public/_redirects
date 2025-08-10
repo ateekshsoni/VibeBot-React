@@ -1,0 +1,18 @@
+# Netlify redirects file for SPA (Single Page Application)
+# This ensures all routes are handled by React Router
+
+# Redirect all routes to index.html for SPA routing
+/*    /index.html   200
+
+# API proxy redirects (if needed)
+/api/*  https://vibeBot-v1.onrender.com/api/:splat  200
+
+# Redirect common auth routes
+/auth/*  /index.html  200
+/dashboard/*  /index.html  200
+/automation/*  /index.html  200
+/analytics/*  /index.html  200
+
+# Handle OAuth callbacks
+/callback/*  /index.html  200
+/instagram/callback  /index.html  200

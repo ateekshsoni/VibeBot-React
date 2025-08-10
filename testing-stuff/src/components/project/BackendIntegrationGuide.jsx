@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Server, 
-  Database, 
-  Code, 
-  Zap, 
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Server,
+  Database,
+  Code,
+  Zap,
   Shield,
   Globe,
   Copy,
@@ -15,18 +15,18 @@ import {
   FileText,
   Settings,
   CloudArrowUp,
-  GitBranch
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  GitBranch,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const BackendIntegrationGuide = () => {
-  const [activeTab, setActiveTab] = useState('setup');
-  const [copiedCode, setCopiedCode] = useState('');
+  const [activeTab, setActiveTab] = useState("setup");
+  const [copiedCode, setCopiedCode] = useState("");
 
   const copyToClipboard = (code, id) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(id);
-    setTimeout(() => setCopiedCode(''), 2000);
+    setTimeout(() => setCopiedCode(""), 2000);
   };
 
   const apiExamples = {
@@ -55,7 +55,7 @@ Content-Type: application/json
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
-}`
+}`,
       },
       login: {
         request: `POST /api/auth/login
@@ -82,8 +82,8 @@ Content-Type: application/json
     },
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
-}`
-      }
+}`,
+      },
     },
     instagram: {
       connect: {
@@ -94,7 +94,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
   "data": {
     "authUrl": "https://api.instagram.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/instagram/callback&scope=user_profile,user_media&response_type=code&state=64f8c2b8e1a2b3c4d5e6f7g8"
   }
-}`
+}`,
       },
       callback: {
         request: `POST /api/instagram/callback
@@ -123,7 +123,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     "accessToken": "encrypted_token_here",
     "connectedAt": "2024-08-09T10:45:00Z"
   }
-}`
+}`,
       },
       profile: {
         request: `GET /api/instagram/profile
@@ -154,8 +154,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
       }
     ]
   }
-}`
-      }
+}`,
+      },
     },
     automation: {
       create: {
@@ -206,7 +206,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
       }
     }
   }
-}`
+}`,
       },
       list: {
         request: `GET /api/automations?page=1&limit=10&status=active
@@ -238,8 +238,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
       "totalPages": 1
     }
   }
-}`
-      }
+}`,
+      },
     },
     analytics: {
       overview: {
@@ -281,7 +281,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
       }
     ]
   }
-}`
+}`,
       },
       performance: {
         request: `GET /api/analytics/performance?automationId=64f8c3d9e1a2b3c4d5e6f7g9&period=30d
@@ -312,9 +312,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`,
       ]
     }
   }
-}`
-      }
-    }
+}`,
+      },
+    },
   };
 
   const backendSetupSteps = [
@@ -332,7 +332,7 @@ npm install --save-dev nodemon
 
 # Instagram API
 npm install instagram-basic-display-api`,
-      language: "bash"
+      language: "bash",
     },
     {
       title: "2. Project Structure",
@@ -375,7 +375,7 @@ npm install instagram-basic-display-api`,
 ├── .gitignore
 ├── package.json
 └── server.js`,
-      language: "text"
+      language: "text",
     },
     {
       title: "3. Environment Configuration",
@@ -411,7 +411,7 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 # Logging
 LOG_LEVEL=info
 LOG_FILE=logs/app.log`,
-      language: "bash"
+      language: "bash",
     },
     {
       title: "4. Express App Setup",
@@ -491,7 +491,7 @@ app.use('*', (req, res) => {
 });
 
 module.exports = app;`,
-      language: "javascript"
+      language: "javascript",
     },
     {
       title: "5. Database Configuration",
@@ -517,8 +517,8 @@ const connectDB = async () => {
 };
 
 module.exports = connectDB;`,
-      language: "javascript"
-    }
+      language: "javascript",
+    },
   ];
 
   const deploymentGuide = [
@@ -529,8 +529,8 @@ module.exports = connectDB;`,
         "2. Install Vercel CLI: `npm i -g vercel`",
         "3. Deploy: `vercel --prod`",
         "4. Configure environment variables in Vercel dashboard",
-        "5. Update CORS origins in backend"
-      ]
+        "5. Update CORS origins in backend",
+      ],
     },
     {
       title: "Backend Deployment (Railway/Render)",
@@ -539,8 +539,8 @@ module.exports = connectDB;`,
         "2. Update environment variables for production",
         "3. Deploy to Railway or Render",
         "4. Configure domain and SSL",
-        "5. Update frontend API URLs"
-      ]
+        "5. Update frontend API URLs",
+      ],
     },
     {
       title: "Instagram App Setup",
@@ -549,9 +549,9 @@ module.exports = connectDB;`,
         "2. Create new Instagram Basic Display App",
         "3. Configure OAuth redirect URIs",
         "4. Add Instagram test users",
-        "5. Submit for app review (for production)"
-      ]
-    }
+        "5. Submit for app review (for production)",
+      ],
+    },
   ];
 
   return (
@@ -581,7 +581,9 @@ module.exports = connectDB;`,
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(step.code, `setup-${index}`)}
+                        onClick={() =>
+                          copyToClipboard(step.code, `setup-${index}`)
+                        }
                       >
                         {copiedCode === `setup-${index}` ? (
                           <>Copied!</>
@@ -608,23 +610,39 @@ module.exports = connectDB;`,
             {Object.entries(apiExamples).map(([category, endpoints]) => (
               <Card key={category}>
                 <CardHeader>
-                  <CardTitle className="capitalize">{category} API Examples</CardTitle>
+                  <CardTitle className="capitalize">
+                    {category} API Examples
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     {Object.entries(endpoints).map(([endpoint, data]) => (
                       <div key={endpoint} className="border rounded-lg p-4">
-                        <h4 className="font-medium mb-4 capitalize">{endpoint.replace('_', ' ')}</h4>
+                        <h4 className="font-medium mb-4 capitalize">
+                          {endpoint.replace("_", " ")}
+                        </h4>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-sm font-medium text-green-600">Request</h5>
+                              <h5 className="text-sm font-medium text-green-600">
+                                Request
+                              </h5>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => copyToClipboard(data.request, `req-${category}-${endpoint}`)}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    data.request,
+                                    `req-${category}-${endpoint}`
+                                  )
+                                }
                               >
-                                {copiedCode === `req-${category}-${endpoint}` ? 'Copied!' : <Copy className="w-4 h-4" />}
+                                {copiedCode ===
+                                `req-${category}-${endpoint}` ? (
+                                  "Copied!"
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
                               </Button>
                             </div>
                             <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
@@ -633,13 +651,25 @@ module.exports = connectDB;`,
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-sm font-medium text-blue-600">Response</h5>
+                              <h5 className="text-sm font-medium text-blue-600">
+                                Response
+                              </h5>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => copyToClipboard(data.response, `res-${category}-${endpoint}`)}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    data.response,
+                                    `res-${category}-${endpoint}`
+                                  )
+                                }
                               >
-                                {copiedCode === `res-${category}-${endpoint}` ? 'Copied!' : <Copy className="w-4 h-4" />}
+                                {copiedCode ===
+                                `res-${category}-${endpoint}` ? (
+                                  "Copied!"
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
                               </Button>
                             </div>
                             <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
@@ -786,7 +816,9 @@ export const apiService = new ApiService();`}</code>
                 </div>
 
                 <div>
-                  <h4 className="font-medium mb-3">React Hook for API Integration</h4>
+                  <h4 className="font-medium mb-3">
+                    React Hook for API Integration
+                  </h4>
                   <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
                     <code>{`// src/hooks/useApi.js
 import { useState, useEffect } from 'react';
@@ -843,7 +875,10 @@ export const useApi = (endpoint, options = {}) => {
                 <CardContent>
                   <ul className="space-y-2">
                     {guide.steps.map((step, stepIndex) => (
-                      <li key={stepIndex} className="text-sm text-gray-600 dark:text-gray-400">
+                      <li
+                        key={stepIndex}
+                        className="text-sm text-gray-600 dark:text-gray-400"
+                      >
                         {step}
                       </li>
                     ))}
@@ -860,7 +895,9 @@ export const useApi = (endpoint, options = {}) => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-medium mb-3">Frontend (.env.production)</h4>
+                  <h4 className="font-medium mb-3">
+                    Frontend (.env.production)
+                  </h4>
                   <pre className="bg-gray-900 text-gray-100 p-3 rounded text-sm">
                     <code>{`VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_production_key
 VITE_API_URL=https://your-backend-domain.com/api

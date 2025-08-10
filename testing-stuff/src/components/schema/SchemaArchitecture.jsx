@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Database,
   Users,
@@ -13,65 +13,97 @@ import {
   Shield,
   ArrowDown,
   ArrowRight,
-  Layers
-} from 'lucide-react';
+  Layers,
+} from "lucide-react";
 
 const SchemaArchitecture = () => {
   const architectureLayers = [
     {
-      title: 'Application Layer',
-      color: 'blue',
+      title: "Application Layer",
+      color: "blue",
       components: [
-        { name: 'React Frontend', icon: Users, description: 'User interface components' },
-        { name: 'Authentication', icon: Shield, description: 'Clerk integration' },
-        { name: 'API Routes', icon: Database, description: 'Backend endpoints' }
-      ]
+        {
+          name: "React Frontend",
+          icon: Users,
+          description: "User interface components",
+        },
+        {
+          name: "Authentication",
+          icon: Shield,
+          description: "Clerk integration",
+        },
+        {
+          name: "API Routes",
+          icon: Database,
+          description: "Backend endpoints",
+        },
+      ],
     },
     {
-      title: 'Business Logic Layer',
-      color: 'green',
+      title: "Business Logic Layer",
+      color: "green",
       components: [
-        { name: 'Automation Engine', icon: Bot, description: 'Process automation rules' },
-        { name: 'Analytics Processor', icon: BarChart3, description: 'Data aggregation' },
-        { name: 'Instagram Integration', icon: Instagram, description: 'Social media API' }
-      ]
+        {
+          name: "Automation Engine",
+          icon: Bot,
+          description: "Process automation rules",
+        },
+        {
+          name: "Analytics Processor",
+          icon: BarChart3,
+          description: "Data aggregation",
+        },
+        {
+          name: "Instagram Integration",
+          icon: Instagram,
+          description: "Social media API",
+        },
+      ],
     },
     {
-      title: 'Data Layer',
-      color: 'purple',
+      title: "Data Layer",
+      color: "purple",
       components: [
-        { name: 'User Schema', icon: Database, description: 'MongoDB document structure' },
-        { name: 'Indexes', icon: Layers, description: 'Performance optimization' },
-        { name: 'Encryption', icon: Shield, description: 'Token security' }
-      ]
-    }
+        {
+          name: "User Schema",
+          icon: Database,
+          description: "MongoDB document structure",
+        },
+        {
+          name: "Indexes",
+          icon: Layers,
+          description: "Performance optimization",
+        },
+        { name: "Encryption", icon: Shield, description: "Token security" },
+      ],
+    },
   ];
 
   const dataRelationships = [
     {
-      source: 'User',
-      target: 'Instagram Accounts',
-      relationship: '1:N',
-      description: 'One user can have multiple Instagram accounts'
+      source: "User",
+      target: "Instagram Accounts",
+      relationship: "1:N",
+      description: "One user can have multiple Instagram accounts",
     },
     {
-      source: 'Instagram Account',
-      target: 'Automation Rules',
-      relationship: '1:N',
-      description: 'Each account can have multiple automation rules'
+      source: "Instagram Account",
+      target: "Automation Rules",
+      relationship: "1:N",
+      description: "Each account can have multiple automation rules",
     },
     {
-      source: 'User',
-      target: 'Activity Logs',
-      relationship: '1:N',
-      description: 'User generates multiple activity entries'
+      source: "User",
+      target: "Activity Logs",
+      relationship: "1:N",
+      description: "User generates multiple activity entries",
     },
     {
-      source: 'User',
-      target: 'Analytics Data',
-      relationship: '1:N',
-      description: 'User has daily analytics metrics'
-    }
+      source: "User",
+      target: "Analytics Data",
+      relationship: "1:N",
+      description: "User has daily analytics metrics",
+    },
   ];
 
   return (
@@ -88,15 +120,22 @@ const SchemaArchitecture = () => {
           <div className="space-y-6">
             {architectureLayers.map((layer, layerIdx) => (
               <div key={layerIdx}>
-                <div className={`p-4 rounded-lg bg-${layer.color}-500/20 border border-${layer.color}-500/30`}>
-                  <h3 className={`text-lg font-medium text-${layer.color}-400 mb-4`}>
+                <div
+                  className={`p-4 rounded-lg bg-${layer.color}-500/20 border border-${layer.color}-500/30`}
+                >
+                  <h3
+                    className={`text-lg font-medium text-${layer.color}-400 mb-4`}
+                  >
                     {layer.title}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {layer.components.map((component, idx) => {
                       const Icon = component.icon;
                       return (
-                        <div key={idx} className="p-3 bg-gray-900 rounded border border-gray-600">
+                        <div
+                          key={idx}
+                          className="p-3 bg-gray-900 rounded border border-gray-600"
+                        >
                           <div className="flex items-center space-x-2 mb-2">
                             <Icon className="w-5 h-5 text-white" />
                             <h4 className="text-white font-medium text-sm">
@@ -133,18 +172,27 @@ const SchemaArchitecture = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {dataRelationships.map((rel, idx) => (
-              <div key={idx} className="p-4 bg-gray-900 rounded border border-gray-600">
+              <div
+                key={idx}
+                className="p-4 bg-gray-900 rounded border border-gray-600"
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-white font-medium text-sm">{rel.source}</span>
+                    <span className="text-white font-medium text-sm">
+                      {rel.source}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-xs">{rel.relationship}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {rel.relationship}
+                    </Badge>
                     <ArrowRight className="w-4 h-4 text-gray-400" />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-white font-medium text-sm">{rel.target}</span>
+                    <span className="text-white font-medium text-sm">
+                      {rel.target}
+                    </span>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
                 </div>
@@ -166,7 +214,7 @@ const SchemaArchitecture = () => {
         <CardContent>
           <div className="bg-gray-900 p-4 rounded border border-gray-600 overflow-x-auto">
             <pre className="text-sm text-gray-300">
-{`{
+              {`{
   "_id": "ObjectId(...)",
   "clerkUserId": "user_123abc...",
   "email": "user@example.com",

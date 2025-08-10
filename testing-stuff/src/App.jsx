@@ -1,8 +1,5 @@
 import React from "react";
-import ClerkSignupPage from "./pages/auth/ClerkSignupPage";
-import ClerkLoginPage from "./pages/auth/ClerkLoginPage";
-import ClerkRedirectHandler from "./components/ClerkRedirectHandler";
-import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { ClerkProvider } from "@clerk/clerk-react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,16 +7,24 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+
+// Components
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 import DashboardWrapper from "./components/DashboardWrapper";
+import BackendTestComponent from "./components/BackendTestComponent";
+
+// Pages
+import LandingPage from "./pages/LandingPage";
+import ClerkLoginPage from "./pages/auth/ClerkLoginPage";
+import ClerkSignupPage from "./pages/auth/ClerkSignupPage";
 import DashboardOverview from "./pages/DashboardOverview";
 import AutomationPage from "./pages/AutomationPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
-import LandingPage from "./pages/LandingPage";
 import TestPage from "./pages/TestPage";
 import InstagramCallback from "./pages/InstagramCallback";
 import SchemaVisualizerPage from "./pages/SchemaVisualizerPage";
 import ProjectDocumentationPage from "./pages/ProjectDocumentationPage";
-import BackendTestComponent from "./components/BackendTestComponent";
 
 // Import Clerk publishable key from environment variables
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -93,253 +98,186 @@ function App() {
       <ClerkProvider
         publishableKey={clerkPubKey}
         domain={isProduction ? frontendUrl.replace("https://", "") : undefined}
-        signInUrl={import.meta.env.VITE_CLERK_SIGN_IN_URL || "/sign-in"}
-        signUpUrl={import.meta.env.VITE_CLERK_SIGN_UP_URL || "/sign-up"}
-        signInFallbackRedirectUrl={
-          import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard"
-        }
-        signUpFallbackRedirectUrl={
-          import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || "/dashboard"
-        }
-        signInForceRedirectUrl={
-          import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard"
-        }
-        signUpForceRedirectUrl={
-          import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL || "/dashboard"
-        }
+        afterSignInUrl="/dashboard"
+        afterSignUpUrl="/dashboard"
       >
         <Router>
-          <ClerkRedirectHandler>
-            <div className="min-h-screen bg-background text-foreground">
-              <Routes>
-              {/* Landing Page Route */}
+          <div className="min-h-screen bg-background text-foreground">
+            <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
 
-              {/* Public Routes */}
               <Route
                 path="/sign-in"
                 element={
-                  <SignedOut>
+                  <PublicRoute>
                     <ClerkLoginPage />
-                  </SignedOut>
+                  </PublicRoute>
                 }
               />
+
               <Route
                 path="/sign-up"
                 element={
-                  <SignedOut>
+                  <PublicRoute>
                     <ClerkSignupPage />
-                  </SignedOut>
+                  </PublicRoute>
                 }
               />
+
               <Route
                 path="/signup"
                 element={
-                  <SignedOut>
+                  <PublicRoute>
                     <ClerkSignupPage />
-                  </SignedOut>
+                  </PublicRoute>
                 }
               />
 
-              {/* Backend Test Route */}
-              <Route path="/backend-test" element={<BackendTestComponent />} />
-
-              {/* Legacy routes for backward compatibility */}
+              {/* Legacy route */}
               <Route
                 path="/login"
                 element={<Navigate to="/sign-in" replace />}
               />
 
-              {/* Instagram OAuth Callback - Can be accessed by authenticated users */}
-              <Route
-                path="/instagram/callback"
-                element={
-                  <>
-                    <SignedIn>
-                      <InstagramCallback />
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
+              {/* Backend Test Route (public for testing) */}
+              <Route path="/backend-test" element={<BackendTestComponent />} />
 
               {/* Protected Routes */}
               <Route
                 path="/dashboard"
                 element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <DashboardOverview />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/test"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <TestPage />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/automation"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <AutomationPage />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/analytics"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <AnalyticsPage />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/schema"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <SchemaVisualizerPage />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/project-docs"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <ProjectDocumentationPage />
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/posts"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">
-                            Posts Management
-                          </h2>
-                          <p className="text-gray-600">
-                            Posts page coming soon...
-                          </p>
-                        </div>
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/webhooks"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">
-                            Webhooks Configuration
-                          </h2>
-                          <p className="text-gray-600">
-                            Webhooks page coming soon...
-                          </p>
-                        </div>
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <>
-                    <SignedIn>
-                      <DashboardWrapper>
-                        <div className="text-center py-12">
-                          <h2 className="text-2xl font-semibold mb-4">
-                            Account Settings
-                          </h2>
-                          <p className="text-gray-600">
-                            Settings page coming soon...
-                          </p>
-                        </div>
-                      </DashboardWrapper>
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/sign-in" replace />
-                    </SignedOut>
-                  </>
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <DashboardOverview />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
                 }
               />
 
-              {/* Catch all route - redirect to appropriate location */}
               <Route
-                path="*"
+                path="/automation"
                 element={
-                  <>
-                    <SignedIn>
-                      <Navigate to="/dashboard" replace />
-                    </SignedIn>
-                    <SignedOut>
-                      <Navigate to="/" replace />
-                    </SignedOut>
-                  </>
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <AutomationPage />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
                 }
               />
-              </Routes>
-            </div>
-          </ClerkRedirectHandler>
+
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <AnalyticsPage />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/test"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <TestPage />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/schema"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <SchemaVisualizerPage />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/project-docs"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <ProjectDocumentationPage />
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/instagram/callback"
+                element={
+                  <ProtectedRoute>
+                    <InstagramCallback />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Placeholder Protected Routes */}
+              <Route
+                path="/posts"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <div className="text-center py-12">
+                        <h2 className="text-2xl font-semibold mb-4">
+                          Posts Management
+                        </h2>
+                        <p className="text-gray-600">
+                          Posts page coming soon...
+                        </p>
+                      </div>
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/webhooks"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <div className="text-center py-12">
+                        <h2 className="text-2xl font-semibold mb-4">
+                          Webhooks Configuration
+                        </h2>
+                        <p className="text-gray-600">
+                          Webhooks page coming soon...
+                        </p>
+                      </div>
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <DashboardWrapper>
+                      <div className="text-center py-12">
+                        <h2 className="text-2xl font-semibold mb-4">
+                          Account Settings
+                        </h2>
+                        <p className="text-gray-600">
+                          Settings page coming soon...
+                        </p>
+                      </div>
+                    </DashboardWrapper>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch all route - redirect based on authentication */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
 
           {/* Toast notifications */}
           <Toaster

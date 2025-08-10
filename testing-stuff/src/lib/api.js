@@ -77,17 +77,23 @@ api.interceptors.response.use(
             const currentPath = window.location.pathname;
             
             // Don't redirect if:
-            // 1. Already on auth pages
-            // 2. On landing page
-            // 3. During initial load (within first 5 seconds of page load)
+            // 1. Already on auth pages or landing page
+            // 2. During initial load (within first 10 seconds of page load)
+            // 3. Has Clerk authentication parameters
             const isOnAuthPage = ['/sign-in', '/sign-up', '/signup', '/'].includes(currentPath);
-            const isRecentPageLoad = (Date.now() - window.performance.timing.navigationStart) < 5000;
+            const isRecentPageLoad = (Date.now() - window.performance.timing.navigationStart) < 10000;
+            const hasClerkParams = window.location.search.includes('_clerk') || window.location.search.includes('__clerk');
             
-            if (!isOnAuthPage && !isRecentPageLoad) {
+            if (!isOnAuthPage && !isRecentPageLoad && !hasClerkParams) {
               console.warn("Redirecting to sign-in due to 401 on protected route:", currentPath);
-              window.location.href = "/sign-in";
+              // Use gentle redirect that works with React Router
+              setTimeout(() => {
+                if (window.location.pathname === currentPath) { // Still on same page
+                  window.location.href = "/sign-in";
+                }
+              }, 1000);
             } else {
-              console.log("Skipping redirect - on auth page or recent page load");
+              console.log("Skipping redirect - on auth page, recent page load, or has Clerk params");
             }
           }
           break;

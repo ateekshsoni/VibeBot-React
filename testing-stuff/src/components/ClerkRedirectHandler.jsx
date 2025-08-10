@@ -9,22 +9,55 @@ const ClerkRedirectHandler = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
-    if (isLoaded && isSignedIn && user) {
-      const currentPath = location.pathname;
-      
-      // If user is on auth pages after being signed in, redirect to dashboard
-      if (currentPath === '/sign-in' || currentPath === '/sign-up' || currentPath === '/signup') {
-        console.log("🔄 ClerkRedirectHandler: User authenticated on auth page, redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
-      }
-      
-      // If user lands on root after OAuth (common with Google), redirect to dashboard
-      if (currentPath === '/' && location.search.includes('_clerk')) {
-        console.log("🔄 ClerkRedirectHandler: OAuth redirect detected, redirecting to dashboard");
+    // Wait for Clerk to fully load
+    if (!isLoaded) return;
+
+    const currentPath = location.pathname;
+    console.log("🔄 ClerkRedirectHandler:", {
+      isLoaded,
+      isSignedIn,
+      hasUser: !!user,
+      currentPath,
+    });
+
+    // Handle authenticated users
+    if (isSignedIn && user) {
+      console.log(
+        "✅ User authenticated:",
+        user.primaryEmailAddress?.emailAddress
+      );
+
+      // Redirect authenticated users away from auth pages and landing page
+      const shouldRedirect = ["/sign-in", "/sign-up", "/signup", "/"].includes(
+        currentPath
+      );
+
+      if (shouldRedirect) {
+        console.log("🔄 Redirecting authenticated user to dashboard");
         navigate("/dashboard", { replace: true });
       }
     }
-  }, [isLoaded, isSignedIn, user, navigate, location.pathname, location.search]);
+
+    // Handle unauthenticated users on protected routes
+    if (isLoaded && !isSignedIn) {
+      const protectedRoutes = [
+        "/dashboard",
+        "/automation",
+        "/analytics",
+        "/test",
+        "/schema",
+        "/project-docs",
+        "/posts",
+        "/webhooks",
+        "/settings",
+      ];
+
+      if (protectedRoutes.includes(currentPath)) {
+        console.log("🔄 Redirecting unauthenticated user to sign-in");
+        navigate("/sign-in", { replace: true });
+      }
+    }
+  }, [isLoaded, isSignedIn, user, location.pathname, navigate]);
 
   return children;
 };

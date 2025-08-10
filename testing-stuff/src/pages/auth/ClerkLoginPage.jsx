@@ -77,8 +77,7 @@ const ClerkLoginPage = () => {
             <SignIn
               routing="path"
               path="/sign-in"
-              fallbackRedirectUrl="/dashboard"
-              forceRedirectUrl="/dashboard"
+              afterSignInUrl="/dashboard"
               signUpUrl="/signup"
               appearance={{
                 elements: {

@@ -3,7 +3,8 @@ import { toast } from "react-hot-toast";
 
 export const useAPI = () => {
   const { getToken } = useAuth();
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "https://vibeBot-v1.onrender.com/api";
 
   const apiCall = async (endpoint, options = {}) => {
     try {
@@ -26,12 +27,12 @@ export const useAPI = () => {
       return response.json();
     } catch (error) {
       console.error(`API Error [${endpoint}]:`, error);
-      
+
       // Don't show toast for 401 errors (handled by auth system)
-      if (!error.message?.includes('401')) {
+      if (!error.message?.includes("401")) {
         toast.error(error.message || "Something went wrong");
       }
-      
+
       throw error;
     }
   };

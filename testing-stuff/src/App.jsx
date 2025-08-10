@@ -1,6 +1,6 @@
 import React from 'react';
-import ClerkLoginPage from './pages/auth/ClerkLoginPage';
-import ClerkSignupPage from './pages/auth/ClerkSignupPage'; 
+import SimpleSignupPage from './pages/auth/SimpleSignupPage';
+import SimpleLoginPage from './pages/auth/SimpleLoginPage';
 import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 import {
   BrowserRouter as Router,
@@ -66,9 +66,9 @@ function App() {
             <Route path="/" element={<LandingPage />} />
 
             {/* Public Routes */}
-            <Route path="/sign-in" element={<ClerkLoginPage />} />
-            <Route path="/sign-up" element={<ClerkSignupPage />} />
-            <Route path="/signup" element={<ClerkSignupPage />} />
+            <Route path="/sign-in" element={<SimpleLoginPage />} />
+            <Route path="/sign-up" element={<SimpleSignupPage />} />
+            <Route path="/signup" element={<SimpleSignupPage />} />
             
             {/* Backend Test Route */}
             <Route path="/backend-test" element={<BackendTestComponent />} />

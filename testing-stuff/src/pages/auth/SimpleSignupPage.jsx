@@ -34,6 +34,9 @@ const SimpleSignupPage = () => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         navigate("/dashboard");
+      } else if (result.status === "missing_requirements") {
+        // Handle email verification if needed
+        console.log("Email verification required");
       }
     } catch (err) {
       console.error("Signup error:", err);

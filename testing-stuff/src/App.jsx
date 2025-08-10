@@ -68,16 +68,13 @@ function App() {
             {/* Public Routes */}
             <Route path="/sign-in" element={<ClerkLoginPage />} />
             <Route path="/sign-up" element={<ClerkSignupPage />} />
+            <Route path="/signup" element={<ClerkSignupPage />} />
             
             {/* Backend Test Route */}
             <Route path="/backend-test" element={<BackendTestComponent />} />
 
             {/* Legacy routes for backward compatibility */}
             <Route path="/login" element={<Navigate to="/sign-in" replace />} />
-            <Route
-              path="/signup"
-              element={<Navigate to="/sign-up" replace />}
-            />
 
             {/* Instagram OAuth Callback - Can be accessed by authenticated users */}
             <Route

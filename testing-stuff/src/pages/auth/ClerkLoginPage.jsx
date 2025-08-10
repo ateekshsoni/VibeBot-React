@@ -76,7 +76,9 @@ const ClerkLoginPage = () => {
         <SignIn 
           routing="path"
           path="/sign-in"
-          redirectUrl="/dashboard"
+          fallbackRedirectUrl="/dashboard"
+          forceRedirectUrl="/dashboard"
+          signUpUrl="/signup"
           appearance={{
             elements: {
               rootBox: {
@@ -85,10 +87,12 @@ const ClerkLoginPage = () => {
               card: {
                 backgroundColor: 'transparent',
                 boxShadow: 'none',
-                border: 'none'
+                border: 'none',
+                padding: '0'
               },
               headerTitle: {
-                color: 'white'
+                color: 'white',
+                fontSize: '24px'
               },
               headerSubtitle: {
                 color: '#9ca3af'
@@ -96,6 +100,10 @@ const ClerkLoginPage = () => {
               formButtonPrimary: {
                 backgroundColor: '#3b82f6',
                 fontSize: '16px',
+                padding: '12px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                fontWeight: '500',
                 '&:hover': {
                   backgroundColor: '#2563eb'
                 }
@@ -104,17 +112,32 @@ const ClerkLoginPage = () => {
                 backgroundColor: '#4b5563',
                 border: '1px solid #6b7280',
                 color: 'white',
+                padding: '12px',
+                borderRadius: '6px',
                 '&:focus': {
-                  borderColor: '#3b82f6'
+                  borderColor: '#3b82f6',
+                  outline: 'none',
+                  boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)'
                 }
               },
               formFieldLabel: {
-                color: 'white'
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '500'
               },
               footerActionText: {
                 color: '#9ca3af'
               },
               footerActionLink: {
+                color: '#3b82f6',
+                '&:hover': {
+                  color: '#2563eb'
+                }
+              },
+              identityPreviewText: {
+                color: 'white'
+              },
+              identityPreviewEditButton: {
                 color: '#3b82f6'
               }
             }

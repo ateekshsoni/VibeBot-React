@@ -23,16 +23,20 @@ const InstagramConnectButton = ({
     try {
       setIsLoading(true);
       console.log("� Connecting to Instagram production endpoint...");
-      
+
       // Enhanced logging for debugging
       console.log("🔍 Debug Info:", {
         isSignedIn: auth.isSignedIn,
-        hasGetToken: typeof auth.getToken === 'function',
+        hasGetToken: typeof auth.getToken === "function",
         hasUser: !!user,
         hasSession: !!session,
-        userMethods: user ? Object.getOwnPropertyNames(Object.getPrototypeOf(user)) : [],
-        sessionMethods: session ? Object.getOwnPropertyNames(Object.getPrototypeOf(session)) : [],
-        authMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(auth))
+        userMethods: user
+          ? Object.getOwnPropertyNames(Object.getPrototypeOf(user))
+          : [],
+        sessionMethods: session
+          ? Object.getOwnPropertyNames(Object.getPrototypeOf(session))
+          : [],
+        authMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(auth)),
       });
 
       // Check if user is authenticated
@@ -47,7 +51,7 @@ const InstagramConnectButton = ({
       let tokenMethod = null;
 
       // Method 1: useAuth getToken
-      if (!token && typeof auth.getToken === 'function') {
+      if (!token && typeof auth.getToken === "function") {
         try {
           console.log("🔄 Trying auth.getToken()...");
           token = await auth.getToken();
@@ -59,7 +63,7 @@ const InstagramConnectButton = ({
       }
 
       // Method 2: user getToken
-      if (!token && user && typeof user.getToken === 'function') {
+      if (!token && user && typeof user.getToken === "function") {
         try {
           console.log("� Trying user.getToken()...");
           token = await user.getToken();
@@ -71,7 +75,7 @@ const InstagramConnectButton = ({
       }
 
       // Method 3: session getToken
-      if (!token && session && typeof session.getToken === 'function') {
+      if (!token && session && typeof session.getToken === "function") {
         try {
           console.log("🔄 Trying session.getToken()...");
           token = await session.getToken();
@@ -85,10 +89,10 @@ const InstagramConnectButton = ({
       // APPROACH 2: If token available, use it
       if (token) {
         console.log(`🔑 Token obtained via ${tokenMethod}: ✅ Available`);
-        
+
         try {
           console.log("🔄 Calling /api/auth/instagram/initiate with token...");
-          
+
           const response = await fetch(
             "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
             {
@@ -152,10 +156,10 @@ const InstagramConnectButton = ({
       // APPROACH 4: Direct redirect (ultimate fallback)
       console.log("🔄 Using direct redirect as final fallback...");
       toast.success("🔄 Connecting via secure session...");
-      
-      // Use the original endpoint for direct redirect
-      window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
 
+      // Use the original endpoint for direct redirect
+      window.location.href =
+        "https://vibeBot-v1.onrender.com/api/auth/instagram";
     } catch (error) {
       console.error("❌ Fatal error in Instagram connect:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");

@@ -3,7 +3,10 @@ import { useUser, useAuth, useSession } from "@clerk/clerk-react";
 import { useSearchParams } from "react-router-dom";
 import { useUserData } from "@/hooks/useUserData";
 import { useInstagramCallbackSimple } from "@/hooks/useInstagramCallbackSimple";
-import { connectInstagramSimple, checkInstagramStatusSimple } from "@/utils/instagramSimple";
+import {
+  connectInstagramSimple,
+  checkInstagramStatusSimple,
+} from "@/utils/instagramSimple";
 import { toast } from "react-hot-toast";
 import {
   Card,
@@ -500,10 +503,11 @@ const DashboardContent = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-green-700 font-medium">
-                  ✅ Instagram @{instagramStatus.username} connected successfully!
+                  ✅ Instagram @{instagramStatus.username} connected
+                  successfully!
                 </span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     console.log("🔄 Refreshing Instagram status...");

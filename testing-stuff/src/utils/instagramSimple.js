@@ -8,9 +8,9 @@
  */
 export const getClerkToken = async (auth, user, session) => {
   console.log("🔍 Attempting to get Clerk token...");
-  
+
   // Method 1: auth.getToken()
-  if (auth && typeof auth.getToken === 'function') {
+  if (auth && typeof auth.getToken === "function") {
     try {
       console.log("🔄 Trying auth.getToken()...");
       const token = await auth.getToken();
@@ -24,7 +24,7 @@ export const getClerkToken = async (auth, user, session) => {
   }
 
   // Method 2: user.getToken()
-  if (user && typeof user.getToken === 'function') {
+  if (user && typeof user.getToken === "function") {
     try {
       console.log("🔄 Trying user.getToken()...");
       const token = await user.getToken();
@@ -38,7 +38,7 @@ export const getClerkToken = async (auth, user, session) => {
   }
 
   // Method 3: session.getToken()
-  if (session && typeof session.getToken === 'function') {
+  if (session && typeof session.getToken === "function") {
     try {
       console.log("🔄 Trying session.getToken()...");
       const token = await session.getToken();
@@ -61,7 +61,7 @@ export const getClerkToken = async (auth, user, session) => {
 export const connectInstagramSimple = async (auth, user, session) => {
   try {
     console.log("🚀 Starting Instagram connection...");
-    
+
     // Check authentication
     if (!auth?.isSignedIn) {
       throw new Error("User not authenticated");
@@ -69,10 +69,10 @@ export const connectInstagramSimple = async (auth, user, session) => {
 
     // APPROACH 1: Try with token
     const { token, method } = await getClerkToken(auth, user, session);
-    
+
     if (token) {
       console.log(`🔑 Using token from ${method}`);
-      
+
       try {
         const response = await fetch(
           "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
@@ -86,7 +86,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
         );
 
         const data = await response.json();
-        
+
         if (data.success) {
           console.log("🚀 Instagram OAuth URL received, redirecting...");
           window.location.href = data.authUrl;
@@ -112,7 +112,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
       );
 
       const data = await response.json();
-      
+
       if (data.success) {
         console.log("🚀 Session-based OAuth URL received, redirecting...");
         window.location.href = data.authUrl;
@@ -127,7 +127,6 @@ export const connectInstagramSimple = async (auth, user, session) => {
     // APPROACH 3: Direct redirect fallback
     console.log("🔄 Using direct redirect as final fallback...");
     window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
-
   } catch (error) {
     console.error("❌ Instagram connection failed:", error);
     throw error;
@@ -140,7 +139,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
 export const checkInstagramStatusSimple = async (auth, user, session) => {
   try {
     const { token } = await getClerkToken(auth, user, session);
-    
+
     if (!token) {
       return { connected: false, error: "No authentication token available" };
     }

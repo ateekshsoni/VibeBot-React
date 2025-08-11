@@ -31,7 +31,7 @@ const InstagramConnectButton = ({
         return;
       }
 
-      console.log("� Connecting Instagram account...");
+      console.log("📸 Connecting Instagram account...");
       console.log(
         "🔑 Clerk token obtained:",
         token ? "✅ Available" : "❌ Missing"
@@ -47,8 +47,13 @@ const InstagramConnectButton = ({
       );
       toast.success("🔄 Connecting to Instagram...");
 
-      // Direct redirect to production endpoint
-      window.location.href = productionEndpoint;
+      // Create URL with token parameter for backend authentication
+      const authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(
+        token
+      )}`;
+
+      // Direct redirect to production endpoint with authentication
+      window.location.href = authenticatedUrl;
     } catch (error) {
       console.error("❌ Error initiating Instagram OAuth:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");

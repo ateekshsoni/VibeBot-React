@@ -124,21 +124,33 @@ const DashboardContent = () => {
   // Handle Instagram connection redirect
   const handleConnectInstagram = async () => {
     try {
-      console.log("🔍 URGENT DEBUG: Connecting to Instagram debug endpoint...");
-      console.log("🧪 Using debug endpoint to bypass requireAuth middleware");
+      console.log("� Connecting to Instagram production endpoint...");
       
-      // CRITICAL: Use debug endpoint to identify state parameter issue
-      const debugEndpoint = "https://vibeBot-v1.onrender.com/api/auth/instagram-test";
+      // Get Clerk token for authentication
+      const token = await clerkUser?.getToken();
       
-      console.log("🚀 Redirecting to debug endpoint:", debugEndpoint);
-      toast.success("🧪 Testing Instagram connection with debug endpoint...");
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
       
-      // Direct redirect to debug endpoint
-      window.location.href = debugEndpoint;
+      console.log("🔑 Clerk token obtained:", token ? "✅ Available" : "❌ Missing");
+      
+      // PRODUCTION: Use production endpoint with proper token authentication
+      const productionEndpoint = "https://vibeBot-v1.onrender.com/api/auth/instagram";
+      
+      console.log("🚀 Redirecting to PRODUCTION Instagram endpoint:", productionEndpoint);
+      toast.success("🔄 Connecting to Instagram...");
+      
+      // Create URL with token parameter for backend authentication
+      const authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(token)}`;
+      
+      // Direct redirect to production endpoint with authentication
+      window.location.href = authenticatedUrl;
       
     } catch (error) {
-      console.error("❌ CRITICAL: Failed to initiate Instagram debug connection:", error);
-      toast.error("❌ Debug connection failed. Please check console and share logs.");
+      console.error("❌ Failed to initiate Instagram connection:", error);
+      toast.error("❌ Failed to connect Instagram. Please try again.");
     }
   };
 
@@ -258,17 +270,12 @@ const DashboardContent = () => {
           <Button
             onClick={handleConnectInstagram}
             size="lg"
-            className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg animate-pulse"
+            className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
             <Instagram className="mr-2 h-5 w-5" />
-            🧪 DEBUG: Test Instagram Connection
+            📸 Connect Instagram Business
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
-          
-          <div className="text-center text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
-            <p className="font-medium">🚨 URGENT DEBUG MODE ACTIVE</p>
-            <p>This will use the debug endpoint to identify the state parameter issue</p>
-          </div>
 
           {/* Security Note */}
           <div className="space-y-2 text-center">

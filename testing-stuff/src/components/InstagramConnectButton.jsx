@@ -1,14 +1,11 @@
 import React, { useState } from "react";
-import { useUser, useSession } from "@clerk/clerk-react";
-import {
-  getMetaBusinessLoginUrl,
-  getInstagramOAuthUrl,
-} from "../lib/instagram";
+import { useUser } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
 /**
  * Instagram Business Connect Button Component
- * Uses the exact Instagram Business Login URL from Meta Console
+ * Uses the new backend /api/auth/instagram/initiate endpoint
+ * for proper OAuth URL generation with user context
  */
 const InstagramConnectButton = ({
   onConnect = null,
@@ -17,12 +14,12 @@ const InstagramConnectButton = ({
   children = null,
 }) => {
   const { user } = useUser();
-  const { session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInstagramConnect = async () => {
     try {
       setIsLoading(true);
+      console.log("🚀 Connecting to Instagram production endpoint...");
 
       // Check if user is authenticated
       if (!user) {
@@ -30,87 +27,49 @@ const InstagramConnectButton = ({
         return;
       }
 
-      // Get the authenticated user's token from Clerk using multiple fallback methods
+      // Get the authenticated user's token from Clerk
       let token;
       try {
-        // Method 1: Try user.getToken()
-        if (user && typeof user.getToken === "function") {
-          token = await user.getToken();
-        }
+        token = await user.getToken();
       } catch (error) {
-        console.warn("user.getToken failed:", error);
-      }
-
-      if (!token) {
-        try {
-          // Method 2: Try session.getToken()
-          if (session && typeof session.getToken === "function") {
-            token = await session.getToken();
-          }
-        } catch (error) {
-          console.warn("session.getToken failed:", error);
-        }
-      }
-
-      if (!token) {
-        try {
-          // Method 3: Try with template parameter
-          if (user && typeof user.getToken === "function") {
-            token = await user.getToken({ template: "default" });
-          }
-        } catch (error) {
-          console.warn("user.getToken with template failed:", error);
-        }
-      }
-
-      if (!token) {
-        // Method 4: Direct redirect without token (let backend handle authentication via cookies)
-        console.log("All token methods failed, using direct redirect approach");
-        toast.success("🔄 Connecting to Instagram via session...");
-
-        // Direct redirect - let the backend handle authentication via session cookies
-        window.location.href = productionEndpoint;
+        console.error("Failed to get token:", error);
+        toast.error("Authentication error. Please try again.");
         return;
       }
 
-      console.log("📸 Connecting Instagram account...");
-      console.log(
-        "🔑 Clerk token obtained:",
-        token ? "✅ Available" : "❌ Missing"
-      );
-
-      // Redirect to the PRODUCTION Instagram OAuth endpoint
-      const productionEndpoint =
-        "https://vibeBot-v1.onrender.com/api/auth/instagram";
-
-      console.log(
-        "🚀 Redirecting to PRODUCTION Instagram endpoint:",
-        productionEndpoint
-      );
-      toast.success("🔄 Connecting to Instagram...");
-
-      // Create URL with token parameter for backend authentication
-      let authenticatedUrl;
-      if (token.startsWith("session:")) {
-        // For session-based tokens, use a different parameter
-        const sessionId = token.replace("session:", "");
-        authenticatedUrl = `${productionEndpoint}?session_id=${encodeURIComponent(
-          sessionId
-        )}`;
-      } else if (token === "fallback-redirect") {
-        // Direct redirect without token parameter (backend should handle session)
-        authenticatedUrl = productionEndpoint;
-      } else {
-        // Normal flow with token
-        authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(
-          token
-        )}`;
+      if (!token) {
+        toast.error("Please login first");
+        return;
       }
 
-      // Direct redirect to production endpoint
-      window.location.href = authenticatedUrl;
+      console.log("🔑 Clerk token obtained: ✅ Available");
+
+      // Call the new initiate endpoint to get OAuth URL
+      const response = await fetch(
+        "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("🚀 Instagram OAuth URL received, redirecting...");
+        toast.success("🔄 Redirecting to Instagram...");
+
+        // Now redirect to the OAuth URL
+        window.location.href = data.authUrl;
+      } else {
+        console.error("❌ Failed to get Instagram OAuth URL:", data.error);
+        toast.error(`❌ Failed to connect Instagram: ${data.error}`);
+      }
     } catch (error) {
-      console.error("❌ Error initiating Instagram OAuth:", error);
+      console.error("❌ Error connecting Instagram:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");
     } finally {
       setIsLoading(false);

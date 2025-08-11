@@ -6,6 +6,7 @@ import { useInstagramCallbackSimple } from "@/hooks/useInstagramCallbackSimple";
 import {
   connectInstagramSimple,
   checkInstagramStatusSimple,
+  getClerkToken,
 } from "@/utils/instagramSimple";
 import { toast } from "react-hot-toast";
 import {
@@ -45,6 +46,8 @@ const DashboardContent = () => {
     username: null,
     loading: true,
   });
+  const [userProfile, setUserProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Use simple callback handler without complex dependencies
   const { processing } = useInstagramCallbackSimple();
@@ -66,20 +69,74 @@ const DashboardContent = () => {
     refetch,
   } = useUserData();
 
-  // Check Instagram status on component mount
+  // Check Instagram status and fetch user profile on component mount
   useEffect(() => {
-    if (clerkUser && auth.isSignedIn) {
-      checkInstagramStatusSimple(auth, clerkUser, session);
-    }
+    const fetchUserData = async () => {
+      if (clerkUser && auth.isSignedIn) {
+        try {
+          // Check Instagram status
+          console.log("🔄 Checking Instagram status...");
+          const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+          console.log("📊 Instagram status result:", statusResult);
+          
+          setInstagramStatus({
+            connected: statusResult.connected || false,
+            username: statusResult.username || null,
+            loading: false,
+          });
+
+          // Fetch user profile from backend
+          setProfileLoading(true);
+          const { token } = await getClerkToken(auth, clerkUser, session);
+          
+          if (token) {
+            const response = await fetch(
+              `${import.meta.env.VITE_API_URL}/user/profile`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (response.ok) {
+              const userData = await response.json();
+              console.log("👤 User profile data:", userData);
+              setUserProfile(userData);
+            } else {
+              console.error("❌ Failed to fetch user profile:", response.status);
+            }
+          }
+        } catch (error) {
+          console.error("❌ Error fetching user data:", error);
+          setInstagramStatus(prev => ({ ...prev, loading: false }));
+        } finally {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
   }, [clerkUser, auth.isSignedIn]);
 
   // Handle Instagram connection redirect using comprehensive token access
   const handleConnectInstagram = async () => {
     try {
+      setInstagramStatus(prev => ({ ...prev, loading: true }));
       await connectInstagramSimple(auth, clerkUser, session);
+      
+      // After successful connection, refresh status
+      const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+      setInstagramStatus({
+        connected: statusResult.connected || false,
+        username: statusResult.username || null,
+        loading: false,
+      });
     } catch (error) {
       console.error("❌ Instagram connection failed:", error);
       toast.error(`❌ Connection failed: ${error.message}`);
+      setInstagramStatus(prev => ({ ...prev, loading: false }));
     }
   };
   // Skeleton Loading Component
@@ -121,6 +178,151 @@ const DashboardContent = () => {
             Retry
           </Button>
         </div>
+      </CardContent>
+    </Card>
+  );
+
+  // User Profile Component
+  const UserProfile = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Users className="h-5 w-5" />
+          <span>User Profile</span>
+        </CardTitle>
+        <CardDescription>
+          Your account information and connection status
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {profileLoading ? (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-muted rounded-full animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-32 animate-pulse" />
+                <div className="h-3 bg-muted rounded w-48 animate-pulse" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="h-3 bg-muted rounded w-20 animate-pulse" />
+                <div className="h-4 bg-muted rounded w-24 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 bg-muted rounded w-24 animate-pulse" />
+                <div className="h-4 bg-muted rounded w-20 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* User Basic Info */}
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                {clerkUser?.firstName?.charAt(0) || clerkUser?.emailAddresses?.[0]?.emailAddress?.charAt(0) || "U"}
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {clerkUser?.firstName} {clerkUser?.lastName}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {clerkUser?.emailAddresses?.[0]?.emailAddress}
+                </p>
+              </div>
+            </div>
+
+            {/* User Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Account Status */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Account Status
+                </p>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="text-sm font-medium">Active</span>
+                </div>
+              </div>
+
+              {/* Instagram Connection */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Instagram Status
+                </p>
+                <div className="flex items-center space-x-2">
+                  {instagramStatus.connected ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-600">
+                        @{instagramStatus.username}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-medium text-orange-600">
+                        Not Connected
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Member Since */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Member Since
+                </p>
+                <p className="text-sm font-medium">
+                  {userProfile?.createdAt 
+                    ? new Date(userProfile.createdAt).toLocaleDateString()
+                    : clerkUser?.createdAt 
+                    ? new Date(clerkUser.createdAt).toLocaleDateString()
+                    : "Recently"
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Backend Data Preview (if available) */}
+            {userProfile && (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Backend Data Status
+                </p>
+                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>User ID:</span>
+                    <span className="font-mono text-xs">{userProfile.id}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Clerk ID:</span>
+                    <span className="font-mono text-xs">{userProfile.clerkId}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Automation Enabled:</span>
+                    <span className={`font-medium ${userProfile.automationSettings?.isEnabled ? 'text-green-600' : 'text-orange-600'}`}>
+                      {userProfile.automationSettings?.isEnabled ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Instagram Connected:</span>
+                    <span className={`font-medium ${userProfile.instagram?.isConnected ? 'text-green-600' : 'text-red-600'}`}>
+                      {userProfile.instagram?.isConnected ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  {userProfile.instagram?.username && (
+                    <div className="flex justify-between text-sm">
+                      <span>Instagram Username:</span>
+                      <span className="font-medium">@{userProfile.instagram.username}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -478,6 +680,9 @@ const DashboardContent = () => {
       {/* Backend Connection Error */}
       {!backendConnected && <BackendErrorBanner />}
 
+      {/* User Profile Section */}
+      <UserProfile />
+
       {/* Processing state during OAuth callback */}
       {processing && (
         <Card className="border-blue-200 bg-blue-50">
@@ -509,9 +714,20 @@ const DashboardContent = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     console.log("🔄 Refreshing Instagram status...");
-                    checkInstagramStatusSimple(auth, clerkUser, session);
+                    setInstagramStatus(prev => ({ ...prev, loading: true }));
+                    try {
+                      const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+                      setInstagramStatus({
+                        connected: statusResult.connected || false,
+                        username: statusResult.username || null,
+                        loading: false,
+                      });
+                    } catch (error) {
+                      console.error("❌ Error refreshing status:", error);
+                      setInstagramStatus(prev => ({ ...prev, loading: false }));
+                    }
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />

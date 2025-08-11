@@ -179,7 +179,6 @@ export const connectInstagramSimple = async (auth, user, session) => {
  */
 export const checkInstagramStatusSimple = async (auth, user, session) => {
   try {
-    ƒ;
     const { token } = await getClerkToken(auth, user, session);
 
     if (!token) {

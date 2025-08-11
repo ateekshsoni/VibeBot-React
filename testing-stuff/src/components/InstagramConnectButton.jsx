@@ -20,30 +20,21 @@ const InstagramConnectButton = ({
     try {
       setIsLoading(true);
       
-      // Try to get OAuth URL from backend first
-      let oauthUrl;
-      try {
-        oauthUrl = await getInstagramOAuthUrl(user?.id);
-      } catch (error) {
-        console.log("Backend unavailable, using Meta Business Login URL");
-        // Fallback to Meta Business Login URL
-        oauthUrl = getMetaBusinessLoginUrl(user?.id);
-      }
-
-      console.log("🚀 Redirecting to Instagram Business Login:", oauthUrl);
+      console.log("🔍 URGENT DEBUG: Connecting to Instagram debug endpoint...");
+      console.log("🧪 Using debug endpoint to bypass requireAuth middleware");
       
-      if (onConnect) {
-        onConnect(oauthUrl);
-      } else {
-        // Direct redirect to Instagram
-        window.location.href = oauthUrl;
-      }
+      // CRITICAL: Use debug endpoint to identify state parameter issue
+      const debugEndpoint = "https://vibeBot-v1.onrender.com/api/auth/instagram-test";
       
-      toast.success("Redirecting to Instagram Business Login...");
+      console.log("🚀 Redirecting to debug endpoint:", debugEndpoint);
+      toast.success("🧪 Testing Instagram connection with debug endpoint...");
+      
+      // Direct redirect to debug endpoint
+      window.location.href = debugEndpoint;
       
     } catch (error) {
-      console.error("❌ Failed to initiate Instagram connection:", error);
-      toast.error("Failed to connect to Instagram. Please try again.");
+      console.error("❌ CRITICAL: Failed to initiate Instagram debug connection:", error);
+      toast.error("❌ Debug connection failed. Please check console and share logs.");
     } finally {
       setIsLoading(false);
     }

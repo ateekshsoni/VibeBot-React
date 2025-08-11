@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useSearchParams } from "react-router-dom";
 import { useUserData } from "@/hooks/useUserData";
 import { getInstagramOAuthUrl } from "@/lib/instagram";
+import { toast } from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -31,6 +33,13 @@ import { cn } from "@/lib/utils";
 
 const DashboardContent = () => {
   const { user: clerkUser } = useUser();
+  const [searchParams] = useSearchParams();
+  const [instagramStatus, setInstagramStatus] = useState({
+    connected: false,
+    username: null,
+    loading: true,
+  });
+  
   const {
     user,
     instagram,
@@ -44,15 +53,92 @@ const DashboardContent = () => {
     refetch,
   } = useUserData();
 
+  // CRITICAL: Handle Instagram OAuth success/error from URL parameters
+  useEffect(() => {
+    const instagramSuccess = searchParams.get('instagram_success');
+    const instagramError = searchParams.get('instagram_error');
+    const username = searchParams.get('username');
+
+    console.log("🔍 Checking Instagram OAuth URL parameters:", {
+      instagramSuccess,
+      instagramError,
+      username,
+      fullURL: window.location.href
+    });
+
+    if (instagramSuccess) {
+      console.log("✅ Instagram OAuth SUCCESS detected!");
+      toast.success(`🎉 Instagram account @${username} connected successfully!`);
+      
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard');
+      
+      // Refresh Instagram status
+      refreshInstagramStatus();
+    }
+
+    if (instagramError) {
+      console.error("❌ Instagram OAuth ERROR detected:", decodeURIComponent(instagramError));
+      toast.error(`❌ Instagram connection failed: ${decodeURIComponent(instagramError)}`);
+      
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [searchParams]);
+
+  // Check Instagram connection status
+  const refreshInstagramStatus = async () => {
+    try {
+      console.log("🔍 Checking Instagram connection status...");
+      const response = await fetch("https://vibeBot-v1.onrender.com/api/instagram/status", {
+        headers: {
+          Authorization: `Bearer ${await clerkUser?.getToken()}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📊 Instagram status response:", data);
+        setInstagramStatus({
+          connected: data.connected || false,
+          username: data.username || null,
+          loading: false,
+        });
+      } else {
+        console.error("❌ Instagram status check failed:", response.status);
+        setInstagramStatus(prev => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error("❌ Error checking Instagram status:", error);
+      setInstagramStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Check Instagram status on component mount
+  useEffect(() => {
+    if (clerkUser) {
+      refreshInstagramStatus();
+    }
+  }, [clerkUser]);
+
   // Handle Instagram connection redirect
   const handleConnectInstagram = async () => {
     try {
-      // Get Instagram OAuth URL from backend endpoint
-      const instagramOAuthUrl = await getInstagramOAuthUrl();
-      window.location.href = instagramOAuthUrl;
+      console.log("🔍 URGENT DEBUG: Connecting to Instagram debug endpoint...");
+      console.log("🧪 Using debug endpoint to bypass requireAuth middleware");
+      
+      // CRITICAL: Use debug endpoint to identify state parameter issue
+      const debugEndpoint = "https://vibeBot-v1.onrender.com/api/auth/instagram-test";
+      
+      console.log("🚀 Redirecting to debug endpoint:", debugEndpoint);
+      toast.success("🧪 Testing Instagram connection with debug endpoint...");
+      
+      // Direct redirect to debug endpoint
+      window.location.href = debugEndpoint;
+      
     } catch (error) {
-      console.error("Failed to initiate Instagram OAuth:", error);
-      // Could show an error toast here
+      console.error("❌ CRITICAL: Failed to initiate Instagram debug connection:", error);
+      toast.error("❌ Debug connection failed. Please check console and share logs.");
     }
   };
 
@@ -172,12 +258,17 @@ const DashboardContent = () => {
           <Button
             onClick={handleConnectInstagram}
             size="lg"
-            className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+            className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg animate-pulse"
           >
             <Instagram className="mr-2 h-5 w-5" />
-            Connect Instagram Business
+            🧪 DEBUG: Test Instagram Connection
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
+          
+          <div className="text-center text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+            <p className="font-medium">🚨 URGENT DEBUG MODE ACTIVE</p>
+            <p>This will use the debug endpoint to identify the state parameter issue</p>
+          </div>
 
           {/* Security Note */}
           <div className="space-y-2 text-center">
@@ -443,10 +534,41 @@ const DashboardContent = () => {
       {!backendConnected && <BackendErrorBanner />}
 
       {/* Main Content */}
-      {!instagram?.isConnected ? (
+      {instagramStatus.loading ? (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>🔍 Checking Instagram connection status...</p>
+          </div>
+        </div>
+      ) : !instagramStatus.connected ? (
         <InstagramNotConnected />
       ) : (
-        <ConnectedDashboard />
+        <div className="space-y-6">
+          {/* Instagram Connected Status */}
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-700 font-medium">
+                  ✅ Instagram @{instagramStatus.username} connected successfully!
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    console.log("🔄 Refreshing Instagram status...");
+                    refreshInstagramStatus();
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <ConnectedDashboard />
+        </div>
       )}
     </div>
   );

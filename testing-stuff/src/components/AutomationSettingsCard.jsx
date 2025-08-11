@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth, useUser, useSession } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
-import { getClerkToken } from "@/utils/instagramSimple";
+import { useAPI } from "@/hooks/useAPI";
 import {
   Card,
   CardContent,
@@ -18,11 +18,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange }) => {
+const AutomationSettingsCard = () => {
   const auth = useAuth();
   const { user } = useUser();
   const { session } = useSession();
-  
+  const { get, put } = useAPI();
+
   const [settings, setSettings] = useState({
     keywords: [],
     dmTemplate: "",
@@ -39,7 +40,7 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
       caseSensitive: false,
     },
   });
-  
+
   const [newKeyword, setNewKeyword] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,31 +49,17 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
   useEffect(() => {
     const fetchSettings = async () => {
       if (!auth?.isSignedIn || !user || !session) return;
-      
+
       try {
         setLoading(true);
-        const { token } = await getClerkToken(auth, user, session);
-        
-        if (!token) {
-          console.error("No token available");
-          return;
-        }
 
-        const response = await fetch("https://vibeBot-v1.onrender.com/api/user/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const data = await get("/user/profile");
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user?.automationSettings) {
-            setSettings(prev => ({
-              ...prev,
-              ...data.user.automationSettings,
-            }));
-          }
+        if (data.user?.automationSettings) {
+          setSettings((prev) => ({
+            ...prev,
+            ...data.user.automationSettings,
+          }));
         }
       } catch (error) {
         console.error("Failed to fetch automation settings:", error);
@@ -102,27 +89,17 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
 
     setSaving(true);
     try {
-      const { token } = await getClerkToken(auth, user, session);
-      
-      if (!token) {
-        throw new Error("No authentication token available");
-      }
-
-      const response = await fetch("https://vibeBot-v1.onrender.com/api/user/automation", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(settings),
+      await put("/user/automation-settings", {
+        keywords: settings.keywords,
+        dmTemplate: settings.dmTemplate,
+        successMessage: settings.successMessage,
+        failureMessage: settings.failureMessage,
+        isEnabled: settings.isEnabled,
+        rateLimiting: settings.rateLimiting,
+        options: settings.options,
       });
 
-      if (response.ok) {
-        toast.success("✅ Automation settings saved successfully!");
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
+      toast.success("✅ Automation settings saved successfully!");
     } catch (error) {
       console.error("Failed to save automation settings:", error);
       toast.error(`❌ Failed to save settings: ${error.message}`);
@@ -143,44 +120,42 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
     }
 
     try {
-      const { token } = await getClerkToken(auth, user, session);
-      
-      if (!token) {
-        throw new Error("No authentication token available");
-      }
-
       const newEnabledState = !settings.isEnabled;
 
-      const response = await fetch("https://vibeBot-v1.onrender.com/api/user/automation/toggle", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ enabled: newEnabledState }),
+      await put("/user/automation-settings", {
+        isEnabled: newEnabledState,
+        keywords: settings.keywords,
+        dmTemplate: settings.dmTemplate,
+        successMessage: settings.successMessage,
+        failureMessage: settings.failureMessage,
+        rateLimiting: settings.rateLimiting,
+        options: settings.options,
       });
 
-      if (response.ok) {
-        setSettings(prev => ({ ...prev, isEnabled: newEnabledState }));
-        toast.success(`✅ Automation ${newEnabledState ? 'enabled' : 'disabled'} successfully!`);
-        
-        if (onAutomationChange) {
-          onAutomationChange(newEnabledState);
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}`);
+      setSettings((prev) => ({ ...prev, isEnabled: newEnabledState }));
+      toast.success(
+        `✅ Automation ${
+          newEnabledState ? "enabled" : "disabled"
+        } successfully!`
+      );
+
+      if (onAutomationChange) {
+        onAutomationChange(newEnabledState);
       }
     } catch (error) {
       console.error("Failed to toggle automation:", error);
-      toast.error(`❌ Failed to ${settings.isEnabled ? 'disable' : 'enable'} automation: ${error.message}`);
+      toast.error(
+        `❌ Failed to ${
+          settings.isEnabled ? "disable" : "enable"
+        } automation: ${error.message}`
+      );
     }
   };
 
   const addKeyword = () => {
     const keyword = newKeyword.trim().toLowerCase();
     if (keyword && !settings.keywords.includes(keyword)) {
-      setSettings(prev => ({
+      setSettings((prev) => ({
         ...prev,
         keywords: [...prev.keywords, keyword],
       }));
@@ -189,7 +164,7 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
   };
 
   const removeKeyword = (index) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       keywords: prev.keywords.filter((_, i) => i !== index),
     }));
@@ -199,11 +174,14 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
     const steps = [
       { name: "Instagram Connected", completed: instagramConnected },
       { name: "Keywords Added", completed: settings.keywords.length > 0 },
-      { name: "DM Template Created", completed: settings.dmTemplate.trim().length > 0 },
+      {
+        name: "DM Template Created",
+        completed: settings.dmTemplate.trim().length > 0,
+      },
       { name: "Automation Enabled", completed: settings.isEnabled },
     ];
-    
-    const completedSteps = steps.filter(step => step.completed).length;
+
+    const completedSteps = steps.filter((step) => step.completed).length;
     return { steps, progress: (completedSteps / steps.length) * 100 };
   };
 
@@ -232,15 +210,20 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
               Comment-to-DM Automation
             </CardTitle>
             <CardDescription>
-              Automatically send DMs when users comment specific keywords on your posts
+              Automatically send DMs when users comment specific keywords on
+              your posts
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={instagramConnected ? "default" : "secondary"}>
-              {instagramConnected ? "📱 Instagram Connected" : "❌ Instagram Required"}
+              {instagramConnected
+                ? "📱 Instagram Connected"
+                : "❌ Instagram Required"}
             </Badge>
-            <Badge variant={settings.isEnabled ? "default" : "secondary"} 
-                   className={settings.isEnabled ? "bg-green-500" : ""}>
+            <Badge
+              variant={settings.isEnabled ? "default" : "secondary"}
+              className={settings.isEnabled ? "bg-green-500" : ""}
+            >
               {settings.isEnabled ? "🟢 ON" : "🔴 OFF"}
             </Badge>
           </div>
@@ -252,10 +235,12 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-sm">Setup Progress</h4>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
+            <span className="text-sm text-muted-foreground">
+              {Math.round(progress)}% Complete
+            </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
-            <div 
+            <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
@@ -263,10 +248,18 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
           <div className="grid grid-cols-2 gap-2">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center gap-2 text-sm">
-                <span className={step.completed ? "text-green-500" : "text-muted-foreground"}>
+                <span
+                  className={
+                    step.completed ? "text-green-500" : "text-muted-foreground"
+                  }
+                >
                   {step.completed ? "✅" : "⏳"}
                 </span>
-                <span className={step.completed ? "text-green-700" : "text-muted-foreground"}>
+                <span
+                  className={
+                    step.completed ? "text-green-700" : "text-muted-foreground"
+                  }
+                >
                   {step.name}
                 </span>
               </div>
@@ -277,7 +270,8 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
         {!instagramConnected && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <p className="text-orange-800 text-sm">
-              ⚠️ Please connect your Instagram Business account first to configure automation settings.
+              ⚠️ Please connect your Instagram Business account first to
+              configure automation settings.
             </p>
           </div>
         )}
@@ -289,7 +283,8 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
           <div>
             <Label className="text-base font-semibold">Trigger Keywords</Label>
             <p className="text-sm text-muted-foreground mt-1">
-              When users comment these keywords, they'll automatically receive a DM
+              When users comment these keywords, they'll automatically receive a
+              DM
             </p>
           </div>
 
@@ -306,7 +301,10 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
               }}
               disabled={!instagramConnected}
             />
-            <Button onClick={addKeyword} disabled={!instagramConnected || !newKeyword.trim()}>
+            <Button
+              onClick={addKeyword}
+              disabled={!instagramConnected || !newKeyword.trim()}
+            >
               Add
             </Button>
           </div>
@@ -331,12 +329,12 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
           {/* Keyword Options */}
           <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
             <Label className="text-sm font-medium">Matching Options</Label>
-            <RadioGroup 
+            <RadioGroup
               value={settings.options.matchType}
-              onValueChange={(value) => 
-                setSettings(prev => ({
+              onValueChange={(value) =>
+                setSettings((prev) => ({
                   ...prev,
-                  options: { ...prev.options, matchType: value }
+                  options: { ...prev.options, matchType: value },
                 }))
               }
               disabled={!instagramConnected}
@@ -354,15 +352,15 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 </Label>
               </div>
             </RadioGroup>
-            
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="caseSensitive"
                 checked={settings.options.caseSensitive}
                 onCheckedChange={(checked) =>
-                  setSettings(prev => ({
+                  setSettings((prev) => ({
                     ...prev,
-                    options: { ...prev.options, caseSensitive: checked }
+                    options: { ...prev.options, caseSensitive: checked },
                   }))
                 }
                 disabled={!instagramConnected}
@@ -379,17 +377,20 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
         {/* DM Template Section */}
         <div className="space-y-4">
           <div>
-            <Label className="text-base font-semibold">DM Message Template</Label>
+            <Label className="text-base font-semibold">
+              DM Message Template
+            </Label>
             <p className="text-sm text-muted-foreground mt-1">
-              This message will be sent automatically to users who comment trigger keywords
+              This message will be sent automatically to users who comment
+              trigger keywords
             </p>
           </div>
 
           <div className="space-y-2">
             <Textarea
               value={settings.dmTemplate}
-              onChange={(e) => 
-                setSettings(prev => ({ ...prev, dmTemplate: e.target.value }))
+              onChange={(e) =>
+                setSettings((prev) => ({ ...prev, dmTemplate: e.target.value }))
               }
               placeholder="Hi there! Thanks for your interest. Here's what you're looking for..."
               maxLength={1000}
@@ -407,7 +408,9 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
         {/* Comment Reply Messages */}
         <div className="space-y-4">
           <div>
-            <Label className="text-base font-semibold">Comment Reply Messages</Label>
+            <Label className="text-base font-semibold">
+              Comment Reply Messages
+            </Label>
             <p className="text-sm text-muted-foreground mt-1">
               These messages will be posted as replies to trigger comments
             </p>
@@ -422,13 +425,16 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 id="successMessage"
                 value={settings.successMessage}
                 onChange={(e) =>
-                  setSettings(prev => ({ ...prev, successMessage: e.target.value }))
+                  setSettings((prev) => ({
+                    ...prev,
+                    successMessage: e.target.value,
+                  }))
                 }
                 maxLength={200}
                 disabled={!instagramConnected}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="failureMessage" className="text-sm">
                 Failure Message (when DM fails)
@@ -437,7 +443,10 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 id="failureMessage"
                 value={settings.failureMessage}
                 onChange={(e) =>
-                  setSettings(prev => ({ ...prev, failureMessage: e.target.value }))
+                  setSettings((prev) => ({
+                    ...prev,
+                    failureMessage: e.target.value,
+                  }))
                 }
                 maxLength={200}
                 disabled={!instagramConnected}
@@ -451,15 +460,20 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
         {/* Rate Limiting Section */}
         <div className="space-y-4">
           <div>
-            <Label className="text-base font-semibold">Rate Limiting (Safety Settings)</Label>
+            <Label className="text-base font-semibold">
+              Rate Limiting (Safety Settings)
+            </Label>
             <p className="text-sm text-muted-foreground mt-1">
-              Configure limits to prevent spam and comply with Instagram policies
+              Configure limits to prevent spam and comply with Instagram
+              policies
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="maxPerHour" className="text-sm">Max DMs per hour</Label>
+              <Label htmlFor="maxPerHour" className="text-sm">
+                Max DMs per hour
+              </Label>
               <Input
                 id="maxPerHour"
                 type="number"
@@ -467,12 +481,12 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 max="50"
                 value={settings.rateLimiting.maxDMsPerHour}
                 onChange={(e) =>
-                  setSettings(prev => ({
+                  setSettings((prev) => ({
                     ...prev,
                     rateLimiting: {
                       ...prev.rateLimiting,
-                      maxDMsPerHour: parseInt(e.target.value) || 1
-                    }
+                      maxDMsPerHour: parseInt(e.target.value) || 1,
+                    },
                   }))
                 }
                 disabled={!instagramConnected}
@@ -480,7 +494,9 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="maxPerDay" className="text-sm">Max DMs per day</Label>
+              <Label htmlFor="maxPerDay" className="text-sm">
+                Max DMs per day
+              </Label>
               <Input
                 id="maxPerDay"
                 type="number"
@@ -488,12 +504,12 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 max="200"
                 value={settings.rateLimiting.maxDMsPerDay}
                 onChange={(e) =>
-                  setSettings(prev => ({
+                  setSettings((prev) => ({
                     ...prev,
                     rateLimiting: {
                       ...prev.rateLimiting,
-                      maxDMsPerDay: parseInt(e.target.value) || 1
-                    }
+                      maxDMsPerDay: parseInt(e.target.value) || 1,
+                    },
                   }))
                 }
                 disabled={!instagramConnected}
@@ -501,7 +517,9 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="delay" className="text-sm">Delay between DMs (seconds)</Label>
+              <Label htmlFor="delay" className="text-sm">
+                Delay between DMs (seconds)
+              </Label>
               <Input
                 id="delay"
                 type="number"
@@ -509,12 +527,12 @@ const AutomationSettingsCard = ({ instagramConnected = false, onAutomationChange
                 max="300"
                 value={settings.rateLimiting.delayBetweenDMs}
                 onChange={(e) =>
-                  setSettings(prev => ({
+                  setSettings((prev) => ({
                     ...prev,
                     rateLimiting: {
                       ...prev.rateLimiting,
-                      delayBetweenDMs: parseInt(e.target.value) || 10
-                    }
+                      delayBetweenDMs: parseInt(e.target.value) || 10,
+                    },
                   }))
                 }
                 disabled={!instagramConnected}

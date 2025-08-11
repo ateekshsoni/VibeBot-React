@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import InstagramAccountCard from "@/components/InstagramAccountCard";
 import AutomationSettingsCard from "@/components/AutomationSettingsCard";
+import SetupProgressCard from "@/components/SetupProgressCard";
+import ActivityFeedCard from "@/components/ActivityFeedCard";
+import useAutomationStats from "@/hooks/useAutomationStats";
 import {
   Card,
   CardContent,
@@ -10,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   MessageSquare,
   Users,
@@ -17,27 +21,33 @@ import {
   TrendingUp,
   Bot,
   Settings,
+  Target,
+  Clock,
+  RefreshCw,
 } from "lucide-react";
 
 const AutomationPage = () => {
   const { isSignedIn } = useAuth();
   const [instagramConnected, setInstagramConnected] = useState(false);
   const [automationEnabled, setAutomationEnabled] = useState(false);
-  const [stats, setStats] = useState({
-    totalTriggers: 0,
-    successfulDMs: 0,
-    successRate: 0,
-    activeAutomations: 0,
-  });
+  
+  // Use the new automation stats hook
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
+    isSetupComplete,
+    setupProgress,
+    isActive,
+    performanceData
+  } = useAutomationStats();
 
-  // Update stats when automation status changes
+  // Update local state when stats change
   useEffect(() => {
-    setStats(prev => ({
-      ...prev,
-      activeAutomations: automationEnabled ? 1 : 0,
-      successRate: prev.totalTriggers > 0 ? (prev.successfulDMs / prev.totalTriggers) * 100 : 0
-    }));
-  }, [automationEnabled]);
+    setInstagramConnected(stats.instagramConnected);
+    setAutomationEnabled(stats.isEnabled);
+  }, [stats.instagramConnected, stats.isEnabled]);
 
   if (!isSignedIn) {
     return (
@@ -70,6 +80,15 @@ const AutomationPage = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={refetchStats}
+              variant="ghost"
+              size="sm"
+              disabled={statsLoading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${statsLoading ? 'animate-spin' : ''}`} />
+              {statsLoading ? 'Updating...' : 'Refresh'}
+            </Button>
             <Badge variant={instagramConnected ? "default" : "secondary"}>
               {instagramConnected ? "📱 Connected" : "❌ No Connection"}
             </Badge>
@@ -86,12 +105,17 @@ const AutomationPage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-blue-500" />
+              <Target className="h-5 w-5 text-blue-500" />
               <div>
-                <p className="text-sm text-muted-foreground">Active Automations</p>
+                <p className="text-sm text-muted-foreground">Total Triggers</p>
                 <p className="text-2xl font-bold">
-                  {stats.activeAutomations}
+                  {statsLoading ? '...' : stats.totalTriggers.toLocaleString()}
                 </p>
+                {stats.lastTriggeredAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Last: {new Date(stats.lastTriggeredAt).toLocaleDateString()}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -102,23 +126,12 @@ const AutomationPage = () => {
             <div className="flex items-center space-x-2">
               <MessageSquare className="h-5 w-5 text-green-500" />
               <div>
-                <p className="text-sm text-muted-foreground">Total Triggers</p>
-                <p className="text-2xl font-bold">
-                  {stats.totalTriggers.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Bot className="h-5 w-5 text-purple-500" />
-              <div>
                 <p className="text-sm text-muted-foreground">Successful DMs</p>
                 <p className="text-2xl font-bold">
-                  {stats.successfulDMs.toLocaleString()}
+                  {statsLoading ? '...' : stats.successfulDMs.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {stats.failedDMs} failed
                 </p>
               </div>
             </div>
@@ -128,11 +141,31 @@ const AutomationPage = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-orange-500" />
+              <TrendingUp className="h-5 w-5 text-purple-500" />
               <div>
                 <p className="text-sm text-muted-foreground">Success Rate</p>
                 <p className="text-2xl font-bold">
-                  {stats.successRate}%
+                  {statsLoading ? '...' : `${stats.successRate}%`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {performanceData.totalDMs} total DMs
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Zap className="h-5 w-5 text-orange-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Keywords Active</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : stats.keywordsCount}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isActive ? 'Monitoring' : 'Inactive'}
                 </p>
               </div>
             </div>
@@ -140,12 +173,17 @@ const AutomationPage = () => {
         </Card>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Instagram Connection */}
+        {/* Left Column */}
         <div className="space-y-6">
           <InstagramAccountCard 
             onStatusChange={(connected) => setInstagramConnected(connected)}
+          />
+          
+          <SetupProgressCard 
+            stats={stats}
+            loading={statsLoading}
           />
           
           {/* Feature Overview */}
@@ -207,11 +245,16 @@ const AutomationPage = () => {
           </Card>
         </div>
 
-        {/* Automation Settings */}
-        <div>
+        {/* Right Column */}
+        <div className="space-y-6">
           <AutomationSettingsCard 
             instagramConnected={instagramConnected}
             onAutomationChange={(enabled) => setAutomationEnabled(enabled)}
+          />
+          
+          <ActivityFeedCard 
+            maxItems={8}
+            showLoadMore={false}
           />
         </div>
       </div>

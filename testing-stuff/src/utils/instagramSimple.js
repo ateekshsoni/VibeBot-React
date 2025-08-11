@@ -1,68 +1,8 @@
 /**
  * Simplified Instagram integration utilities
- * Using direct Meta OAuth URL approach as specified by backend team
+ * Using axios for better API handling and direct Meta OAuth URL approach
  */
-
-/**
- * Get authentication token from Clerk
- * Supports multiple approaches to handle different auth scenarios
- */
-export async function getClerkToken(auth, user, session) {
-  console.log("🔍 Getting Clerk token...");
-  console.log("Auth state:", {
-    isSignedIn: auth?.isSignedIn,
-    userId: auth?.userId,
-  });
-  console.log("Session state:", {
-    sessionId: session?.id,
-    status: session?.status,
-  });
-
-  try {
-    // Method 1: getToken from session (primary method)
-    if (session?.getToken) {
-      console.log("🔄 Trying session.getToken()...");
-      const token = await session.getToken();
-      if (token) {
-        console.log("✅ Token obtained from session.getToken()");
-        return { token, method: "session.getToken" };
-      }
-    }
-
-    // Method 2: getToken with template from session
-    if (session?.getToken) {
-      console.log("🔄 Trying session.getToken({ template: 'default' })...");
-      const token = await session.getToken({ template: "default" });
-      if (token) {
-        console.log("✅ Token obtained from session.getToken with template");
-        return { token, method: "session.getToken.template" };
-      }
-    }
-
-    // Method 3: Direct user token
-    if (user?.__internal?.token) {
-      console.log("🔄 Trying user.__internal.token...");
-      console.log("✅ Token obtained from user.__internal.token");
-      return { token: user.__internal.token, method: "user.__internal.token" };
-    }
-
-    // Method 4: Try auth.getToken if available
-    if (auth?.getToken) {
-      console.log("🔄 Trying auth.getToken()...");
-      const token = await auth.getToken();
-      if (token) {
-        console.log("✅ Token obtained from auth.getToken()");
-        return { token, method: "auth.getToken" };
-      }
-    }
-
-    console.warn("⚠️ No token available from any method");
-    return { token: null, method: "none" };
-  } catch (error) {
-    console.error("❌ Error getting token:", error);
-    return { token: null, method: "error", error };
-  }
-}
+import { makeAuthenticatedRequest } from '@/lib/apiClient';
 
 /**
  * Connect Instagram using direct Meta OAuth URL
@@ -77,45 +17,21 @@ export const connectInstagramSimple = async (auth, user, session) => {
       throw new Error("User not authenticated");
     }
 
-    // Step 1: Get user database ID from backend
-    const { token } = await getClerkToken(auth, user, session);
-
-    if (!token) {
-      throw new Error("Unable to obtain authentication token");
-    }
-
     console.log("📤 Fetching user profile to get database ID...");
 
     try {
-      // Add timeout to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const userResponse = await fetch(
-        "https://vibeBot-v1.onrender.com/api/user/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal,
-        }
-      );
-
-      clearTimeout(timeoutId);
+      // Use axios with proper authentication
+      const userResponse = await makeAuthenticatedRequest(auth, user, session, {
+        method: 'GET',
+        url: '/user/profile',
+        timeout: 10000
+      });
 
       console.log("📥 User profile response status:", userResponse.status);
-
-      if (!userResponse.ok) {
-        throw new Error(
-          `Failed to fetch user profile: ${userResponse.status} ${userResponse.statusText}`
-        );
-      }
-
-      const userData = await userResponse.json();
-      console.log("👤 User data received:", userData);
+      console.log("👤 User data received:", userResponse.data);
 
       // Step 2: Create state parameter with user ID
+      const userData = userResponse.data;
       const userId =
         userData.user?.id ||
         userData.user?._id ||
@@ -161,10 +77,6 @@ export const connectInstagramSimple = async (auth, user, session) => {
       // Redirect to Instagram OAuth
       window.location.href = instagramUrl;
     } catch (error) {
-      if (error.name === "AbortError") {
-        console.error("❌ Request timed out");
-        throw new Error("Request timeout - please try again");
-      }
       console.error("❌ Error during OAuth initiation:", error);
       throw error;
     }
@@ -179,40 +91,35 @@ export const connectInstagramSimple = async (auth, user, session) => {
  */
 export const checkInstagramStatusSimple = async (auth, user, session) => {
   try {
-    const { token } = await getClerkToken(auth, user, session);
+    console.log("🔍 Checking Instagram status...");
 
-    if (!token) {
-      return { connected: false, error: "No authentication token available" };
-    }
+    const response = await makeAuthenticatedRequest(auth, user, session, {
+      method: 'GET',
+      url: '/user/instagram/status',
+      timeout: 10000
+    });
 
-    const response = await fetch(
-      "https://vibeBot-v1.onrender.com/api/user/instagram/status",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      console.error(
-        "Status check failed:",
-        response.status,
-        response.statusText
-      );
-      return { connected: false, error: `HTTP ${response.status}` };
-    }
-
-    const data = await response.json();
-    console.log("Instagram status:", data);
+    console.log("Instagram status response:", response.data);
 
     return {
-      connected: data.connected || false,
-      data: data,
+      connected: response.data.connected || false,
+      data: response.data,
     };
   } catch (error) {
     console.error("Error checking Instagram status:", error);
+    
+    // Provide more specific error messages
+    if (error.response?.status === 401) {
+      console.error("❌ Authentication failed - please sign out and sign back in");
+      return { connected: false, error: "Authentication failed" };
+    } else if (error.response?.status === 404) {
+      console.error("❌ Endpoint not found - backend may not have this endpoint");
+      return { connected: false, error: "Service unavailable" };
+    } else if (error.code === 'ECONNABORTED') {
+      console.error("❌ Request timeout");
+      return { connected: false, error: "Request timeout" };
+    }
+    
     return { connected: false, error: error.message };
   }
 };
@@ -222,31 +129,17 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
  */
 export const disconnectInstagramSimple = async (auth, user, session) => {
   try {
-    const { token } = await getClerkToken(auth, user, session);
+    console.log("🔌 Disconnecting Instagram account...");
 
-    if (!token) {
-      throw new Error("No authentication token available");
-    }
+    const response = await makeAuthenticatedRequest(auth, user, session, {
+      method: 'POST',
+      url: '/user/instagram/disconnect',
+      timeout: 10000
+    });
 
-    const response = await fetch(
-      "https://vibeBot-v1.onrender.com/api/user/instagram/disconnect",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    console.log("Instagram disconnected:", response.data);
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log("Instagram disconnected:", data);
-
-    return { success: true, data };
+    return { success: true, data: response.data };
   } catch (error) {
     console.error("Error disconnecting Instagram:", error);
     throw error;

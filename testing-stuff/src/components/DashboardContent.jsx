@@ -6,8 +6,8 @@ import { useInstagramCallbackSimple } from "@/hooks/useInstagramCallbackSimple";
 import {
   connectInstagramSimple,
   checkInstagramStatusSimple,
-  getClerkToken,
 } from "@/utils/instagramSimple";
+import { makeAuthenticatedRequest } from "@/lib/apiClient";
 import { toast } from "react-hot-toast";
 import {
   Card,
@@ -74,12 +74,12 @@ const DashboardContent = () => {
     const handleInstagramCallback = () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        
+
         // Handle successful Instagram connection
-        if (params.get('instagram_success')) {
+        if (params.get("instagram_success")) {
           console.log("✅ Instagram connected successfully!");
-          
-          const username = params.get('username');
+
+          const username = params.get("username");
           if (username) {
             setInstagramStatus({
               connected: true,
@@ -90,15 +90,19 @@ const DashboardContent = () => {
           } else {
             toast.success(`✅ Instagram connected successfully!`);
           }
-          
+
           // Refresh Instagram status from backend
           const refreshStatus = async () => {
             try {
-              const status = await checkInstagramStatusSimple(auth, user, session);
+              const status = await checkInstagramStatusSimple(
+                auth,
+                user,
+                session
+              );
               if (status.connected) {
                 setInstagramStatus({
                   connected: true,
-                  username: status.data?.username || username || 'Unknown',
+                  username: status.data?.username || username || "Unknown",
                   loading: false,
                 });
               }
@@ -107,52 +111,54 @@ const DashboardContent = () => {
             }
           };
           refreshStatus();
-          
+
           // Clean up URL
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
           return true;
         }
-      
-      // Handle Instagram OAuth callback (manual association needed)
-      if (params.get('instagram_callback')) {
-        console.log("🔄 Processing Instagram OAuth callback...");
-        
-        // Use toast.success for info messages since toast.info might not exist
-        const loadingToast = toast.loading("🔄 Processing Instagram connection...");
-        
-        // Handle manual association if backend provides the data
-        const instagramId = params.get('instagram_id');
-        const instagramUsername = params.get('instagram_username');
-        const instagramToken = params.get('instagram_token');
-        const instagramExpires = params.get('instagram_expires');
-        const instagramAccountType = params.get('instagram_account_type');
-        
-        if (instagramId && instagramUsername && instagramToken) {
-          console.log("📤 Calling manual association endpoint...");
-          
-          const associateInstagram = async () => {
-            try {
-              const { token } = await getClerkToken(auth, user, session);
-              
-              const response = await fetch(
-                "https://vibeBot-v1.onrender.com/api/auth/instagram/associate",
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    instagram_id: instagramId,
-                    username: instagramUsername,
-                    access_token: instagramToken,
-                    expires_at: instagramExpires,
-                    account_type: instagramAccountType,
-                  }),
-                }
-              );
-              
-              if (response.ok) {
+
+        // Handle Instagram OAuth callback (manual association needed)
+        if (params.get("instagram_callback")) {
+          console.log("🔄 Processing Instagram OAuth callback...");
+
+          // Use toast.success for info messages since toast.info might not exist
+          const loadingToast = toast.loading(
+            "🔄 Processing Instagram connection..."
+          );
+
+          // Handle manual association if backend provides the data
+          const instagramId = params.get("instagram_id");
+          const instagramUsername = params.get("instagram_username");
+          const instagramToken = params.get("instagram_token");
+          const instagramExpires = params.get("instagram_expires");
+          const instagramAccountType = params.get("instagram_account_type");
+
+          if (instagramId && instagramUsername && instagramToken) {
+            console.log("📤 Calling manual association endpoint...");
+
+            const associateInstagram = async () => {
+              try {
+                const response = await makeAuthenticatedRequest(
+                  auth,
+                  user,
+                  session,
+                  {
+                    method: "POST",
+                    url: "/auth/instagram/associate",
+                    data: {
+                      instagram_id: instagramId,
+                      username: instagramUsername,
+                      access_token: instagramToken,
+                      expires_at: instagramExpires,
+                      account_type: instagramAccountType,
+                    },
+                  }
+                );
+
                 toast.dismiss(loadingToast);
                 toast.success(`🎉 Connected to @${instagramUsername}!`);
                 setInstagramStatus({
@@ -160,41 +166,49 @@ const DashboardContent = () => {
                   username: instagramUsername,
                   loading: false,
                 });
-              } else {
+              } catch (error) {
+                console.error("Association error:", error);
                 toast.dismiss(loadingToast);
-                toast.error("❌ Failed to associate Instagram account");
+                toast.error("❌ Connection failed");
               }
-            } catch (error) {
-              console.error("Association error:", error);
-              toast.dismiss(loadingToast);
-              toast.error("❌ Connection failed");
-            }
-          };
-          
-          associateInstagram();
+            };
+
+            associateInstagram();
+          }
+
+          // Clean up URL
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+          return true;
         }
-        
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return true;
-      }
-      
-      // Handle Instagram connection error
-      if (params.get('instagram_error')) {
-        const errorMessage = params.get('instagram_error');
-        console.error("❌ Instagram connection error:", errorMessage);
-        toast.error(`❌ Instagram connection failed: ${errorMessage}`);
-        
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return true;
-      }
-      
-      return false;
+
+        // Handle Instagram connection error
+        if (params.get("instagram_error")) {
+          const errorMessage = params.get("instagram_error");
+          console.error("❌ Instagram connection error:", errorMessage);
+          toast.error(`❌ Instagram connection failed: ${errorMessage}`);
+
+          // Clean up URL
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+          return true;
+        }
+
+        return false;
       } catch (error) {
         console.error("❌ Error handling Instagram callback:", error);
         // Clean up URL even on error
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
         return false;
       }
     };
@@ -204,12 +218,16 @@ const DashboardContent = () => {
         try {
           // First, handle any OAuth callbacks
           const hasCallback = handleInstagramCallback();
-          
+
           // Check Instagram status
           console.log("🔄 Checking Instagram status...");
-          const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+          const statusResult = await checkInstagramStatusSimple(
+            auth,
+            clerkUser,
+            session
+          );
           console.log("📊 Instagram status result:", statusResult);
-          
+
           setInstagramStatus({
             connected: statusResult.connected || false,
             username: statusResult.username || null,
@@ -218,32 +236,28 @@ const DashboardContent = () => {
 
           // Fetch user profile from backend
           setProfileLoading(true);
-          const { token } = await getClerkToken(auth, clerkUser, session);
-          
-          if (token) {
-            const response = await fetch(
-              `${import.meta.env.VITE_API_URL}/user/profile`,
+
+          try {
+            const response = await makeAuthenticatedRequest(
+              auth,
+              clerkUser,
+              session,
               {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
+                method: "GET",
+                url: "/user/profile",
               }
             );
 
-            if (response.ok) {
-              const userData = await response.json();
-              console.log("👤 User profile data:", userData);
-              setUserProfile(userData);
-            } else {
-              console.error("❌ Failed to fetch user profile:", response.status);
-            }
+            console.log("👤 User profile data:", response.data);
+            setUserProfile(response.data);
+          } catch (error) {
+            console.error("❌ Failed to fetch user profile:", error);
+          } finally {
+            setProfileLoading(false);
           }
         } catch (error) {
           console.error("❌ Error fetching user data:", error);
-          setInstagramStatus(prev => ({ ...prev, loading: false }));
-        } finally {
-          setProfileLoading(false);
+          setInstagramStatus((prev) => ({ ...prev, loading: false }));
         }
       }
     };
@@ -254,11 +268,15 @@ const DashboardContent = () => {
   // Handle Instagram connection redirect using comprehensive token access
   const handleConnectInstagram = async () => {
     try {
-      setInstagramStatus(prev => ({ ...prev, loading: true }));
+      setInstagramStatus((prev) => ({ ...prev, loading: true }));
       await connectInstagramSimple(auth, clerkUser, session);
-      
+
       // After successful connection, refresh status
-      const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+      const statusResult = await checkInstagramStatusSimple(
+        auth,
+        clerkUser,
+        session
+      );
       setInstagramStatus({
         connected: statusResult.connected || false,
         username: statusResult.username || null,
@@ -267,7 +285,7 @@ const DashboardContent = () => {
     } catch (error) {
       console.error("❌ Instagram connection failed:", error);
       toast.error(`❌ Connection failed: ${error.message}`);
-      setInstagramStatus(prev => ({ ...prev, loading: false }));
+      setInstagramStatus((prev) => ({ ...prev, loading: false }));
     }
   };
   // Skeleton Loading Component
@@ -351,7 +369,9 @@ const DashboardContent = () => {
             {/* User Basic Info */}
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {clerkUser?.firstName?.charAt(0) || clerkUser?.emailAddresses?.[0]?.emailAddress?.charAt(0) || "U"}
+                {clerkUser?.firstName?.charAt(0) ||
+                  clerkUser?.emailAddresses?.[0]?.emailAddress?.charAt(0) ||
+                  "U"}
               </div>
               <div>
                 <h3 className="font-semibold text-lg">
@@ -406,12 +426,11 @@ const DashboardContent = () => {
                   Member Since
                 </p>
                 <p className="text-sm font-medium">
-                  {userProfile?.createdAt 
+                  {userProfile?.createdAt
                     ? new Date(userProfile.createdAt).toLocaleDateString()
-                    : clerkUser?.createdAt 
+                    : clerkUser?.createdAt
                     ? new Date(clerkUser.createdAt).toLocaleDateString()
-                    : "Recently"
-                  }
+                    : "Recently"}
                 </p>
               </div>
             </div>
@@ -429,24 +448,40 @@ const DashboardContent = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Clerk ID:</span>
-                    <span className="font-mono text-xs">{userProfile.clerkId}</span>
+                    <span className="font-mono text-xs">
+                      {userProfile.clerkId}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Automation Enabled:</span>
-                    <span className={`font-medium ${userProfile.automationSettings?.isEnabled ? 'text-green-600' : 'text-orange-600'}`}>
-                      {userProfile.automationSettings?.isEnabled ? 'Yes' : 'No'}
+                    <span
+                      className={`font-medium ${
+                        userProfile.automationSettings?.isEnabled
+                          ? "text-green-600"
+                          : "text-orange-600"
+                      }`}
+                    >
+                      {userProfile.automationSettings?.isEnabled ? "Yes" : "No"}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Instagram Connected:</span>
-                    <span className={`font-medium ${userProfile.instagram?.isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                      {userProfile.instagram?.isConnected ? 'Yes' : 'No'}
+                    <span
+                      className={`font-medium ${
+                        userProfile.instagram?.isConnected
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {userProfile.instagram?.isConnected ? "Yes" : "No"}
                     </span>
                   </div>
                   {userProfile.instagram?.username && (
                     <div className="flex justify-between text-sm">
                       <span>Instagram Username:</span>
-                      <span className="font-medium">@{userProfile.instagram.username}</span>
+                      <span className="font-medium">
+                        @{userProfile.instagram.username}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -847,9 +882,13 @@ const DashboardContent = () => {
                   size="sm"
                   onClick={async () => {
                     console.log("🔄 Refreshing Instagram status...");
-                    setInstagramStatus(prev => ({ ...prev, loading: true }));
+                    setInstagramStatus((prev) => ({ ...prev, loading: true }));
                     try {
-                      const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);
+                      const statusResult = await checkInstagramStatusSimple(
+                        auth,
+                        clerkUser,
+                        session
+                      );
                       setInstagramStatus({
                         connected: statusResult.connected || false,
                         username: statusResult.username || null,
@@ -857,7 +896,10 @@ const DashboardContent = () => {
                       });
                     } catch (error) {
                       console.error("❌ Error refreshing status:", error);
-                      setInstagramStatus(prev => ({ ...prev, loading: false }));
+                      setInstagramStatus((prev) => ({
+                        ...prev,
+                        loading: false,
+                      }));
                     }
                   }}
                 >

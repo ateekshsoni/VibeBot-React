@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import InstagramAccountCard from "@/components/InstagramAccountCard";
 import AutomationSettingsCard from "@/components/AutomationSettingsCard";

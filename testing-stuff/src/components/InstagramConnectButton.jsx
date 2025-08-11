@@ -64,15 +64,12 @@ const InstagramConnectButton = ({
       }
 
       if (!token) {
-        // Method 4: Use session ID as fallback
-        if (session && session.id) {
-          console.log("Using session ID as fallback token");
-          token = `session:${session.id}`;
-        }
-      }
-
-      if (!token) {
-        toast.error("Unable to get authentication token. Please try again.");
+        // Method 4: Direct redirect without token (let backend handle authentication via cookies)
+        console.log("All token methods failed, using direct redirect approach");
+        toast.success("🔄 Connecting to Instagram via session...");
+        
+        // Direct redirect - let the backend handle authentication via session cookies
+        window.location.href = productionEndpoint;
         return;
       }
 

@@ -93,7 +93,7 @@ export const useInstagramCallback = () => {
     };
 
     handleInstagramCallback();
-  }, [searchParams, navigate, associateInstagramData, refreshStatus, processing]);
+  }, [searchParams, navigate, associateInstagramData, processing]); // Removed refreshStatus to prevent infinite loop
 
   return { processing };
 };

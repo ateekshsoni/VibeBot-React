@@ -11,12 +11,31 @@ export const useInstagram = () => {
     error: null
   });
 
+  // Circuit breaker to prevent infinite loops
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastRetryTime, setLastRetryTime] = useState(0);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 5000; // 5 seconds
+
   // Backend API base URL
   const API_BASE = import.meta.env.VITE_API_URL || 'https://vibeBot-v1.onrender.com';
 
   // Check Instagram connection status
   const checkInstagramStatus = async () => {
     try {
+      // Circuit breaker: prevent infinite retries
+      const now = Date.now();
+      if (retryCount >= MAX_RETRIES && (now - lastRetryTime) < RETRY_DELAY) {
+        console.warn('⚠️ Instagram status check circuit breaker active - too many retries');
+        setInstagramStatus(prev => ({ ...prev, loading: false, error: 'Too many retry attempts' }));
+        return;
+      }
+
+      // Reset retry count if enough time has passed
+      if ((now - lastRetryTime) >= RETRY_DELAY) {
+        setRetryCount(0);
+      }
+
       setInstagramStatus(prev => ({ ...prev, loading: true }));
       
       // Check if user is authenticated first
@@ -41,6 +60,8 @@ export const useInstagram = () => {
         return;
       }
 
+      console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/instagram/status`);
+
       const response = await fetch(`${API_BASE}/api/instagram/status`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -56,16 +77,23 @@ export const useInstagram = () => {
           loading: false,
           error: null
         });
+        // Reset retry count on success
+        setRetryCount(0);
       } else {
+        console.error('❌ Instagram status check failed:', response.status, response.statusText);
+        setRetryCount(prev => prev + 1);
+        setLastRetryTime(now);
         setInstagramStatus({
           connected: false,
           username: null,
           loading: false,
-          error: 'Failed to check status'
+          error: `HTTP ${response.status}: ${response.statusText}`
         });
       }
     } catch (error) {
-      console.error('Error checking Instagram status:', error);
+      console.error('❌ Error checking Instagram status:', error);
+      setRetryCount(prev => prev + 1);
+      setLastRetryTime(Date.now());
       setInstagramStatus({
         connected: false,
         username: null,

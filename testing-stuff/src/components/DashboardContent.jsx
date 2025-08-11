@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useUser, useAuth, useSession } from "@clerk/clerk-react";
 import { useSearchParams } from "react-router-dom";
 import { useUserData } from "@/hooks/useUserData";
-import { useInstagram } from "@/hooks/useInstagram";
-import { useInstagramCallback } from "@/hooks/useInstagramCallback";
+// import { useInstagram } from "@/hooks/useInstagram";
+// import { useInstagramCallback } from "@/hooks/useInstagramCallback";
 import { toast } from "react-hot-toast";
 import {
   Card,
@@ -36,10 +36,16 @@ const DashboardContent = () => {
   const { user: clerkUser } = useUser();
   const auth = useAuth();
   const { session } = useSession();
-  
-  // Use the new Instagram hooks following backend team's implementation
-  const { instagramStatus, connectInstagram, refreshStatus } = useInstagram();
-  const { processing } = useInstagramCallback(); // Handles all URL parameter scenarios
+  const [searchParams] = useSearchParams();
+  const [instagramStatus, setInstagramStatus] = useState({
+    connected: false,
+    username: null,
+    loading: true,
+  });
+
+  // Disable problematic hooks temporarily
+  // const { instagramStatus, connectInstagram, refreshStatus } = useInstagram();
+  // const { processing } = useInstagramCallback(); // Handles all URL parameter scenarios
 
   const {
     user,

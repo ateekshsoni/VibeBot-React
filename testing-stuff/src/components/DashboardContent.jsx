@@ -56,10 +56,10 @@ const DashboardContent = () => {
 
   // Check Instagram status on component mount
   useEffect(() => {
-    if (clerkUser) {
+    if (clerkUser && auth.isSignedIn) {
       refreshStatus();
     }
-  }, [clerkUser, refreshStatus]);
+  }, [clerkUser, auth.isSignedIn, refreshStatus]);
 
   // Handle Instagram connection redirect using new production flow
   const handleConnectInstagram = async () => {

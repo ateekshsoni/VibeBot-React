@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 
 export const useInstagram = () => {
-  const { getToken } = useAuth();
+  const auth = useAuth(); // Don't destructure, use the full auth object
   const [instagramStatus, setInstagramStatus] = useState({
     connected: false,
     username: null,
@@ -19,13 +19,24 @@ export const useInstagram = () => {
     try {
       setInstagramStatus(prev => ({ ...prev, loading: true }));
       
-      const token = await getToken();
+      // Check if user is authenticated first
+      if (!auth.isSignedIn) {
+        setInstagramStatus({
+          connected: false,
+          username: null,
+          loading: false,
+          error: 'User not authenticated'
+        });
+        return;
+      }
+
+      const token = await auth.getToken(); // Use auth.getToken() instead of getToken()
       if (!token) {
         setInstagramStatus({
           connected: false,
           username: null,
           loading: false,
-          error: 'Authentication required'
+          error: 'Authentication token not available'
         });
         return;
       }
@@ -67,7 +78,7 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-      const token = await getToken();
+      const token = await auth.getToken(); // Fix: use auth.getToken()
       if (!token) throw new Error('No authentication token');
 
       const response = await fetch(`${API_BASE}/api/user/profile`, {
@@ -93,6 +104,11 @@ export const useInstagram = () => {
   const connectInstagram = async () => {
     try {
       console.log('🔄 Starting Instagram connection...');
+      
+      // Check if user is authenticated first
+      if (!auth.isSignedIn) {
+        throw new Error('Please login first');
+      }
       
       // Get user database ID for state parameter
       const userId = await getUserDatabaseId();
@@ -131,7 +147,7 @@ export const useInstagram = () => {
     try {
       console.log('🔄 Associating Instagram data with user...');
       
-      const token = await getToken();
+      const token = await auth.getToken(); // Fix: use auth.getToken()
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -171,7 +187,7 @@ export const useInstagram = () => {
   // Disconnect Instagram
   const disconnectInstagram = async () => {
     try {
-      const token = await getToken();
+      const token = await auth.getToken(); // Fix: use auth.getToken()
       if (!token) throw new Error('Authentication required');
 
       const response = await fetch(`${API_BASE}/api/auth/instagram/disconnect`, {

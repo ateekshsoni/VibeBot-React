@@ -9,8 +9,14 @@
  */
 export async function getClerkToken(auth, user, session) {
   console.log("🔍 Getting Clerk token...");
-  console.log("Auth state:", { isSignedIn: auth?.isSignedIn, userId: auth?.userId });
-  console.log("Session state:", { sessionId: session?.id, status: session?.status });
+  console.log("Auth state:", {
+    isSignedIn: auth?.isSignedIn,
+    userId: auth?.userId,
+  });
+  console.log("Session state:", {
+    sessionId: session?.id,
+    status: session?.status,
+  });
 
   try {
     // Method 1: getToken from session (primary method)
@@ -23,7 +29,7 @@ export async function getClerkToken(auth, user, session) {
       }
     }
 
-    // Method 2: getToken with template from session 
+    // Method 2: getToken with template from session
     if (session?.getToken) {
       console.log("🔄 Trying session.getToken({ template: 'default' })...");
       const token = await session.getToken({ template: "default" });
@@ -73,13 +79,13 @@ export const connectInstagramSimple = async (auth, user, session) => {
 
     // Step 1: Get user database ID from backend
     const { token } = await getClerkToken(auth, user, session);
-    
+
     if (!token) {
       throw new Error("Unable to obtain authentication token");
     }
 
     console.log("📤 Fetching user profile to get database ID...");
-    
+
     try {
       // Add timeout to prevent hanging
       const controller = new AbortController();
@@ -101,21 +107,33 @@ export const connectInstagramSimple = async (auth, user, session) => {
       console.log("📥 User profile response status:", userResponse.status);
 
       if (!userResponse.ok) {
-        throw new Error(`Failed to fetch user profile: ${userResponse.status} ${userResponse.statusText}`);
+        throw new Error(
+          `Failed to fetch user profile: ${userResponse.status} ${userResponse.statusText}`
+        );
       }
 
       const userData = await userResponse.json();
       console.log("👤 User data received:", userData);
 
       // Step 2: Create state parameter with user ID
-      const userId = userData.user?.id || userData.user?._id || userData.data?.id || userData.data?._id || userData.id || userData._id;
-      
+      const userId =
+        userData.user?.id ||
+        userData.user?._id ||
+        userData.data?.id ||
+        userData.data?._id ||
+        userData.id ||
+        userData._id;
+
       if (!userId) {
         console.error("❌ No user ID found in response:", userData);
         console.error("❌ Available properties:", Object.keys(userData));
-        if (userData.user) console.error("❌ User object keys:", Object.keys(userData.user));
-        if (userData.data) console.error("❌ Data object keys:", Object.keys(userData.data));
-        throw new Error("User ID not found in profile response. Please try refreshing and connecting again.");
+        if (userData.user)
+          console.error("❌ User object keys:", Object.keys(userData.user));
+        if (userData.data)
+          console.error("❌ Data object keys:", Object.keys(userData.data));
+        throw new Error(
+          "User ID not found in profile response. Please try refreshing and connecting again."
+        );
       }
 
       // Create state parameter - trying simpler format that backend can parse
@@ -129,29 +147,27 @@ export const connectInstagramSimple = async (auth, user, session) => {
       const instagramUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1807810336807413&redirect_uri=https%3A%2F%2FvibeBot-v1.onrender.com%2Fapi%2Fauth%2Finstagram%2Fcallback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights&state=${state}`;
 
       console.log("🔗 Redirecting to Instagram OAuth URL:", instagramUrl);
-      
+
       // Store state for verification if needed
       try {
-        sessionStorage.setItem('instagram_oauth_state', state);
+        sessionStorage.setItem("instagram_oauth_state", state);
         // Clean up any old states
-        sessionStorage.removeItem('instagram_oauth_error');
-        sessionStorage.removeItem('instagram_oauth_code');
+        sessionStorage.removeItem("instagram_oauth_error");
+        sessionStorage.removeItem("instagram_oauth_code");
       } catch (storageError) {
         console.warn("⚠️ Could not access sessionStorage:", storageError);
       }
-      
+
       // Redirect to Instagram OAuth
       window.location.href = instagramUrl;
-      
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         console.error("❌ Request timed out");
         throw new Error("Request timeout - please try again");
       }
       console.error("❌ Error during OAuth initiation:", error);
       throw error;
     }
-
   } catch (error) {
     console.error("❌ Instagram connection failed:", error);
     throw error;
@@ -163,6 +179,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
  */
 export const checkInstagramStatusSimple = async (auth, user, session) => {
   try {
+    ƒ;
     const { token } = await getClerkToken(auth, user, session);
 
     if (!token) {
@@ -170,7 +187,7 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
     }
 
     const response = await fetch(
-      "https://vibeBot-v1.onrender.com/api/instagram/status",
+      "https://vibeBot-v1.onrender.com/api/user/instagram/status",
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -180,7 +197,11 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
     );
 
     if (!response.ok) {
-      console.error("Status check failed:", response.status, response.statusText);
+      console.error(
+        "Status check failed:",
+        response.status,
+        response.statusText
+      );
       return { connected: false, error: `HTTP ${response.status}` };
     }
 
@@ -209,7 +230,7 @@ export const disconnectInstagramSimple = async (auth, user, session) => {
     }
 
     const response = await fetch(
-      "https://vibeBot-v1.onrender.com/api/instagram/disconnect",
+      "https://vibeBot-v1.onrender.com/api/user/instagram/disconnect",
       {
         method: "POST",
         headers: {

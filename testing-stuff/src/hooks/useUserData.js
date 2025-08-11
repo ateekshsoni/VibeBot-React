@@ -25,7 +25,7 @@ export const useUserData = () => {
   const fetchInstagramStatus = async () => {
     try {
       setLoadingInstagram(true);
-      const response = await get("/instagram/status");
+      const response = await get("/user/instagram/status");
       setInstagramData(response.data || response);
     } catch (err) {
       console.error("Error fetching Instagram status:", err);

@@ -60,9 +60,9 @@ export const useInstagram = () => {
         return;
       }
 
-      console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/instagram/status`);
-
-      const response = await fetch(`${API_BASE}/api/instagram/status`, {
+      console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/user/instagram/status`);
+      
+      const response = await fetch(`${API_BASE}/api/user/instagram/status`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

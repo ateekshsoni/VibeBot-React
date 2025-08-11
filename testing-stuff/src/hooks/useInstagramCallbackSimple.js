@@ -49,7 +49,7 @@ export const useInstagramCallbackSimple = () => {
 
           try {
             // For now, just redirect to dashboard and let user try again
-            toast.info('Instagram connection needs setup. Please try connecting again.');
+            toast('Instagram connection needs setup. Please try connecting again.');
             navigate('/dashboard', { replace: true });
           } finally {
             setProcessing(false);

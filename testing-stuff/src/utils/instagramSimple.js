@@ -112,7 +112,10 @@ export const connectInstagramSimple = async (auth, user, session) => {
       
       if (!userId) {
         console.error("❌ No user ID found in response:", userData);
-        throw new Error("User ID not found in profile response");
+        console.error("❌ Available properties:", Object.keys(userData));
+        if (userData.user) console.error("❌ User object keys:", Object.keys(userData.user));
+        if (userData.data) console.error("❌ Data object keys:", Object.keys(userData.data));
+        throw new Error("User ID not found in profile response. Please try refreshing and connecting again.");
       }
 
       // Create state parameter - trying simpler format that backend can parse
@@ -128,7 +131,14 @@ export const connectInstagramSimple = async (auth, user, session) => {
       console.log("🔗 Redirecting to Instagram OAuth URL:", instagramUrl);
       
       // Store state for verification if needed
-      sessionStorage.setItem('instagram_oauth_state', state);
+      try {
+        sessionStorage.setItem('instagram_oauth_state', state);
+        // Clean up any old states
+        sessionStorage.removeItem('instagram_oauth_error');
+        sessionStorage.removeItem('instagram_oauth_code');
+      } catch (storageError) {
+        console.warn("⚠️ Could not access sessionStorage:", storageError);
+      }
       
       // Redirect to Instagram OAuth
       window.location.href = instagramUrl;

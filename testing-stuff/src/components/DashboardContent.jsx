@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useUser, useAuth, useSession } from "@clerk/clerk-react";
 import { useSearchParams } from "react-router-dom";
 import { useUserData } from "@/hooks/useUserData";
-// import { useInstagram } from "@/hooks/useInstagram";
-// import { useInstagramCallback } from "@/hooks/useInstagramCallback";
+import { useInstagramCallbackSimple } from "@/hooks/useInstagramCallbackSimple";
+import { connectInstagramSimple, checkInstagramStatusSimple } from "@/utils/instagramSimple";
 import { toast } from "react-hot-toast";
 import {
   Card,
@@ -43,6 +43,9 @@ const DashboardContent = () => {
     loading: true,
   });
 
+  // Use simple callback handler without complex dependencies
+  const { processing } = useInstagramCallbackSimple();
+
   // Disable problematic hooks temporarily
   // const { instagramStatus, connectInstagram, refreshStatus } = useInstagram();
   // const { processing } = useInstagramCallback(); // Handles all URL parameter scenarios
@@ -63,25 +66,19 @@ const DashboardContent = () => {
   // Check Instagram status on component mount
   useEffect(() => {
     if (clerkUser && auth.isSignedIn) {
-      refreshStatus();
+      checkInstagramStatusSimple(auth, clerkUser, session);
     }
-  }, [clerkUser, auth.isSignedIn, refreshStatus]);
+  }, [clerkUser, auth.isSignedIn]);
 
-  // Handle Instagram connection redirect using new production flow
+  // Handle Instagram connection redirect using comprehensive token access
   const handleConnectInstagram = async () => {
     try {
-      console.log("🔄 Connecting to Instagram using production OAuth flow...");
-      console.log("📋 Following backend team's implementation guide");
-      
-      // Use the new production Instagram connect method
-      await connectInstagram();
-      
+      await connectInstagramSimple(auth, clerkUser, session);
     } catch (error) {
-      console.error("❌ Failed to initiate Instagram connection:", error);
+      console.error("❌ Instagram connection failed:", error);
       toast.error(`❌ Connection failed: ${error.message}`);
     }
   };
-
   // Skeleton Loading Component
   const SkeletonCard = ({ className = "" }) => (
     <Card className={cn("animate-pulse", className)}>
@@ -510,7 +507,7 @@ const DashboardContent = () => {
                   size="sm"
                   onClick={() => {
                     console.log("🔄 Refreshing Instagram status...");
-                    refreshStatus();
+                    checkInstagramStatusSimple(auth, clerkUser, session);
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />

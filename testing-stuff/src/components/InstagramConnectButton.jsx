@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser, useSession } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
 /**
@@ -13,102 +13,150 @@ const InstagramConnectButton = ({
   variant = "primary",
   children = null,
 }) => {
-  const { getToken, isSignedIn } = useAuth();
+  const auth = useAuth();
+  const { user } = useUser();
+  const { session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInstagramConnect = async () => {
     try {
       setIsLoading(true);
       console.log("🚀 Connecting to Instagram production endpoint...");
+      
+      // Enhanced logging for debugging
+      console.log("🔍 Debug Info:", {
+        isSignedIn: auth.isSignedIn,
+        hasGetToken: typeof auth.getToken === 'function',
+        hasUser: !!user,
+        hasSession: !!session,
+        userMethods: user ? Object.getOwnPropertyNames(Object.getPrototypeOf(user)) : [],
+        sessionMethods: session ? Object.getOwnPropertyNames(Object.getPrototypeOf(session)) : [],
+        authMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(auth))
+      });
 
       // Check if user is authenticated
-      if (!isSignedIn) {
+      if (!auth.isSignedIn) {
+        console.error("❌ User not signed in");
         toast.error("Please login first");
         return;
       }
 
-      // Get the authenticated user's token from Clerk with fallback
-      let token;
-      try {
-        token = await getToken();
-      } catch (error) {
-        console.warn("getToken failed, trying fallback approach:", error);
-        
-        // Fallback: Try without token - let backend handle session-based auth
+      // APPROACH 1: Try to get token via multiple methods with extensive logging
+      let token = null;
+      let tokenMethod = null;
+
+      // Method 1: useAuth getToken
+      if (!token && typeof auth.getToken === 'function') {
         try {
-          console.log("🔄 Using session-based authentication fallback");
+          console.log("🔄 Trying auth.getToken()...");
+          token = await auth.getToken();
+          tokenMethod = "auth.getToken()";
+          console.log("✅ Method 1 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 1 failed (auth.getToken):", error.message);
+        }
+      }
+
+      // Method 2: user getToken
+      if (!token && user && typeof user.getToken === 'function') {
+        try {
+          console.log("🔄 Trying user.getToken()...");
+          token = await user.getToken();
+          tokenMethod = "user.getToken()";
+          console.log("✅ Method 2 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 2 failed (user.getToken):", error.message);
+        }
+      }
+
+      // Method 3: session getToken
+      if (!token && session && typeof session.getToken === 'function') {
+        try {
+          console.log("🔄 Trying session.getToken()...");
+          token = await session.getToken();
+          tokenMethod = "session.getToken()";
+          console.log("✅ Method 3 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 3 failed (session.getToken):", error.message);
+        }
+      }
+
+      // APPROACH 2: If token available, use it
+      if (token) {
+        console.log(`🔑 Token obtained via ${tokenMethod}: ✅ Available`);
+        
+        try {
+          console.log("🔄 Calling /api/auth/instagram/initiate with token...");
           
-          // Call the initiate endpoint without Authorization header
-          // Backend should use session cookies for authentication
           const response = await fetch(
             "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
             {
               method: "POST",
               headers: {
+                Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
-              credentials: "include", // Include cookies for session-based auth
             }
           );
 
           const data = await response.json();
+          console.log("📥 Response from initiate endpoint:", data);
 
           if (data.success) {
-            console.log("🚀 Instagram OAuth URL received (session-based), redirecting...");
+            console.log("🚀 Instagram OAuth URL received, redirecting...");
             toast.success("🔄 Redirecting to Instagram...");
             window.location.href = data.authUrl;
             return;
           } else {
-            console.error("❌ Session-based auth also failed:", data.error);
-            toast.error(`❌ Authentication failed: ${data.error}`);
-            return;
+            console.error("❌ Initiate endpoint returned error:", data.error);
+            // Fall through to next approach
           }
-        } catch (sessionError) {
-          console.error("❌ Session-based fallback failed:", sessionError);
-          toast.error("❌ Authentication error. Please try again.");
+        } catch (error) {
+          console.error("❌ Error calling initiate endpoint:", error);
+          // Fall through to next approach
+        }
+      }
+
+      // APPROACH 3: Session-based authentication (no token)
+      console.log("� Trying session-based authentication...");
+      try {
+        const response = await fetch(
+          "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+
+        const data = await response.json();
+        console.log("📥 Session-based response:", data);
+
+        if (data.success) {
+          console.log("🚀 Session-based OAuth URL received, redirecting...");
+          toast.success("🔄 Redirecting to Instagram...");
+          window.location.href = data.authUrl;
           return;
+        } else {
+          console.error("❌ Session-based approach failed:", data.error);
+          // Fall through to final approach
         }
+      } catch (error) {
+        console.error("❌ Session-based approach error:", error);
+        // Fall through to final approach
       }
 
-      if (!token) {
-        console.warn("No token available, using direct session-based redirect");
-        
-        // Final fallback: Direct redirect to session-based endpoint
-        toast.success("🔄 Connecting via secure session...");
-        
-        // Use the original endpoint but with session-based authentication
-        window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
-        return;
-      }
+      // APPROACH 4: Direct redirect (ultimate fallback)
+      console.log("🔄 Using direct redirect as final fallback...");
+      toast.success("🔄 Connecting via secure session...");
+      
+      // Use the original endpoint for direct redirect
+      window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
 
-      console.log("🔑 Clerk token obtained: ✅ Available");
-
-      // Call the new initiate endpoint to get OAuth URL
-      const response = await fetch(
-        "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log("🚀 Instagram OAuth URL received, redirecting...");
-        toast.success("🔄 Redirecting to Instagram...");
-
-        // Now redirect to the OAuth URL
-        window.location.href = data.authUrl;
-      } else {
-        console.error("❌ Failed to get Instagram OAuth URL:", data.error);
-        toast.error(`❌ Failed to connect Instagram: ${data.error}`);
-      }
     } catch (error) {
-      console.error("❌ Error connecting Instagram:", error);
+      console.error("❌ Fatal error in Instagram connect:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");
     } finally {
       setIsLoading(false);

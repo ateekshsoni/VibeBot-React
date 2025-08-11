@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth, useSession } from "@clerk/clerk-react";
 import { useSearchParams } from "react-router-dom";
 import { useUserData } from "@/hooks/useUserData";
 import { getInstagramOAuthUrl } from "@/lib/instagram";
@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils";
 
 const DashboardContent = () => {
   const { user: clerkUser } = useUser();
+  const auth = useAuth();
+  const { session } = useSession();
   const [searchParams] = useSearchParams();
   const [instagramStatus, setInstagramStatus] = useState({
     connected: false,
@@ -97,11 +99,57 @@ const DashboardContent = () => {
   const refreshInstagramStatus = async () => {
     try {
       console.log("🔍 Checking Instagram connection status...");
+      
+      // Enhanced token access attempts
+      let token = null;
+      let tokenMethod = null;
+
+      // Method 1: auth.getToken
+      if (!token && typeof auth.getToken === 'function') {
+        try {
+          token = await auth.getToken();
+          tokenMethod = "auth.getToken()";
+          console.log("✅ Token obtained via auth.getToken()");
+        } catch (error) {
+          console.warn("❌ auth.getToken() failed:", error.message);
+        }
+      }
+
+      // Method 2: clerkUser.getToken
+      if (!token && clerkUser && typeof clerkUser.getToken === 'function') {
+        try {
+          token = await clerkUser.getToken();
+          tokenMethod = "clerkUser.getToken()";
+          console.log("✅ Token obtained via clerkUser.getToken()");
+        } catch (error) {
+          console.warn("❌ clerkUser.getToken() failed:", error.message);
+        }
+      }
+
+      // Method 3: session.getToken
+      if (!token && session && typeof session.getToken === 'function') {
+        try {
+          token = await session.getToken();
+          tokenMethod = "session.getToken()";
+          console.log("✅ Token obtained via session.getToken()");
+        } catch (error) {
+          console.warn("❌ session.getToken() failed:", error.message);
+        }
+      }
+
+      if (!token) {
+        console.warn("⚠️ No token available for Instagram status check");
+        setInstagramStatus((prev) => ({ ...prev, loading: false }));
+        return;
+      }
+
+      console.log(`🔑 Using token from ${tokenMethod} for status check`);
+
       const response = await fetch(
         "https://vibeBot-v1.onrender.com/api/instagram/status",
         {
           headers: {
-            Authorization: `Bearer ${await clerkUser?.getToken()}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -135,54 +183,142 @@ const DashboardContent = () => {
   const handleConnectInstagram = async () => {
     try {
       console.log("🚀 Connecting to Instagram production endpoint...");
+      
+      // Enhanced logging for debugging
+      console.log("🔍 Debug Info:", {
+        isSignedIn: auth.isSignedIn,
+        hasGetToken: typeof auth.getToken === 'function',
+        hasUser: !!clerkUser,
+        hasSession: !!session,
+        userMethods: clerkUser ? Object.getOwnPropertyNames(Object.getPrototypeOf(clerkUser)) : [],
+        sessionMethods: session ? Object.getOwnPropertyNames(Object.getPrototypeOf(session)) : [],
+        authMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(auth))
+      });
 
       // Check if user is authenticated
-      if (!clerkUser) {
+      if (!auth.isSignedIn || !clerkUser) {
+        console.error("❌ User not signed in");
         toast.error("Please login first");
         return;
       }
 
-      // Get Clerk token for authentication
-      let token;
-      try {
-        token = await clerkUser.getToken();
-      } catch (error) {
-        console.error("Failed to get token:", error);
-        toast.error("Authentication error. Please try again.");
-        return;
-      }
+      // APPROACH 1: Try to get token via multiple methods with extensive logging
+      let token = null;
+      let tokenMethod = null;
 
-      if (!token) {
-        toast.error('Please login first');
-        return;
-      }
-
-      console.log('🔑 Clerk token obtained: ✅ Available');
-
-      // Call the new initiate endpoint to get OAuth URL
-      const response = await fetch('https://vibeBot-v1.onrender.com/api/auth/instagram/initiate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // Method 1: useAuth getToken
+      if (!token && typeof auth.getToken === 'function') {
+        try {
+          console.log("🔄 Trying auth.getToken()...");
+          token = await auth.getToken();
+          tokenMethod = "auth.getToken()";
+          console.log("✅ Method 1 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 1 failed (auth.getToken):", error.message);
         }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        console.log('🚀 Instagram OAuth URL received, redirecting...');
-        toast.success("🔄 Redirecting to Instagram...");
-        
-        // Now redirect to the OAuth URL
-        window.location.href = data.authUrl;
-      } else {
-        console.error('❌ Failed to get Instagram OAuth URL:', data.error);
-        toast.error(`❌ Failed to connect Instagram: ${data.error}`);
       }
+
+      // Method 2: clerkUser getToken
+      if (!token && clerkUser && typeof clerkUser.getToken === 'function') {
+        try {
+          console.log("🔄 Trying clerkUser.getToken()...");
+          token = await clerkUser.getToken();
+          tokenMethod = "clerkUser.getToken()";
+          console.log("✅ Method 2 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 2 failed (clerkUser.getToken):", error.message);
+        }
+      }
+
+      // Method 3: session getToken
+      if (!token && session && typeof session.getToken === 'function') {
+        try {
+          console.log("🔄 Trying session.getToken()...");
+          token = await session.getToken();
+          tokenMethod = "session.getToken()";
+          console.log("✅ Method 3 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 3 failed (session.getToken):", error.message);
+        }
+      }
+
+      // APPROACH 2: If token available, use it
+      if (token) {
+        console.log(`🔑 Token obtained via ${tokenMethod}: ✅ Available`);
+        
+        try {
+          console.log("🔄 Calling /api/auth/instagram/initiate with token...");
+          
+          const response = await fetch(
+            "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const data = await response.json();
+          console.log("📥 Response from initiate endpoint:", data);
+
+          if (data.success) {
+            console.log("🚀 Instagram OAuth URL received, redirecting...");
+            toast.success("🔄 Redirecting to Instagram...");
+            window.location.href = data.authUrl;
+            return;
+          } else {
+            console.error("❌ Initiate endpoint returned error:", data.error);
+            // Fall through to next approach
+          }
+        } catch (error) {
+          console.error("❌ Error calling initiate endpoint:", error);
+          // Fall through to next approach
+        }
+      }
+
+      // APPROACH 3: Session-based authentication (no token)
+      console.log("🔄 Trying session-based authentication...");
+      try {
+        const response = await fetch(
+          "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+
+        const data = await response.json();
+        console.log("📥 Session-based response:", data);
+
+        if (data.success) {
+          console.log("🚀 Session-based OAuth URL received, redirecting...");
+          toast.success("🔄 Redirecting to Instagram...");
+          window.location.href = data.authUrl;
+          return;
+        } else {
+          console.error("❌ Session-based approach failed:", data.error);
+          // Fall through to final approach
+        }
+      } catch (error) {
+        console.error("❌ Session-based approach error:", error);
+        // Fall through to final approach
+      }
+
+      // APPROACH 4: Direct redirect (ultimate fallback)
+      console.log("🔄 Using direct redirect as final fallback...");
+      toast.success("🔄 Connecting via secure session...");
+      
+      // Use the original endpoint for direct redirect
+      window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
+
     } catch (error) {
-      console.error('❌ Error connecting Instagram:', error);
-      toast.error('❌ Failed to connect Instagram. Please try again.');
+      console.error("❌ Fatal error in Instagram connect:", error);
+      toast.error("❌ Failed to connect Instagram. Please try again.");
     }
   };
 

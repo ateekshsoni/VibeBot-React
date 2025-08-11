@@ -72,50 +72,53 @@ const DashboardContent = () => {
   // Check Instagram status, fetch user profile, and handle OAuth callbacks on component mount
   useEffect(() => {
     const handleInstagramCallback = () => {
-      const params = new URLSearchParams(window.location.search);
-      
-      // Handle successful Instagram connection
-      if (params.get('instagram_success')) {
-        console.log("✅ Instagram connected successfully!");
+      try {
+        const params = new URLSearchParams(window.location.search);
         
-        const username = params.get('username');
-        if (username) {
-          setInstagramStatus({
-            connected: true,
-            username: username,
-            loading: false,
-          });
-          toast.success(`🎉 Connected to @${username}!`);
-        } else {
-          toast.success(`✅ Instagram connected successfully!`);
-        }
-        
-        // Refresh Instagram status from backend
-        const refreshStatus = async () => {
-          try {
-            const status = await checkInstagramStatusSimple(auth, user, session);
-            if (status.connected) {
-              setInstagramStatus({
-                connected: true,
-                username: status.data?.username || username || 'Unknown',
-                loading: false,
-              });
-            }
-          } catch (error) {
-            console.error("Error refreshing Instagram status:", error);
+        // Handle successful Instagram connection
+        if (params.get('instagram_success')) {
+          console.log("✅ Instagram connected successfully!");
+          
+          const username = params.get('username');
+          if (username) {
+            setInstagramStatus({
+              connected: true,
+              username: username,
+              loading: false,
+            });
+            toast.success(`🎉 Connected to @${username}!`);
+          } else {
+            toast.success(`✅ Instagram connected successfully!`);
           }
-        };
-        refreshStatus();
-        
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return true;
-      }
+          
+          // Refresh Instagram status from backend
+          const refreshStatus = async () => {
+            try {
+              const status = await checkInstagramStatusSimple(auth, user, session);
+              if (status.connected) {
+                setInstagramStatus({
+                  connected: true,
+                  username: status.data?.username || username || 'Unknown',
+                  loading: false,
+                });
+              }
+            } catch (error) {
+              console.error("Error refreshing Instagram status:", error);
+            }
+          };
+          refreshStatus();
+          
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return true;
+        }
       
       // Handle Instagram OAuth callback (manual association needed)
       if (params.get('instagram_callback')) {
         console.log("🔄 Processing Instagram OAuth callback...");
-        toast.info("🔄 Processing Instagram connection...");
+        
+        // Use toast.success for info messages since toast.info might not exist
+        const loadingToast = toast.loading("🔄 Processing Instagram connection...");
         
         // Handle manual association if backend provides the data
         const instagramId = params.get('instagram_id');
@@ -150,6 +153,7 @@ const DashboardContent = () => {
               );
               
               if (response.ok) {
+                toast.dismiss(loadingToast);
                 toast.success(`🎉 Connected to @${instagramUsername}!`);
                 setInstagramStatus({
                   connected: true,
@@ -157,10 +161,12 @@ const DashboardContent = () => {
                   loading: false,
                 });
               } else {
+                toast.dismiss(loadingToast);
                 toast.error("❌ Failed to associate Instagram account");
               }
             } catch (error) {
               console.error("Association error:", error);
+              toast.dismiss(loadingToast);
               toast.error("❌ Connection failed");
             }
           };
@@ -185,6 +191,12 @@ const DashboardContent = () => {
       }
       
       return false;
+      } catch (error) {
+        console.error("❌ Error handling Instagram callback:", error);
+        // Clean up URL even on error
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return false;
+      }
     };
 
     const fetchUserData = async () => {

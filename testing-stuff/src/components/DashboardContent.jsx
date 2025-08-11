@@ -69,11 +69,64 @@ const DashboardContent = () => {
     refetch,
   } = useUserData();
 
-  // Check Instagram status and fetch user profile on component mount
+  // Check Instagram status, fetch user profile, and handle OAuth callbacks on component mount
   useEffect(() => {
+    const handleInstagramCallback = () => {
+      const params = new URLSearchParams(window.location.search);
+      
+      // Handle successful Instagram connection
+      if (params.get('instagram_success')) {
+        console.log("✅ Instagram connected successfully!");
+        toast.success(`✅ Instagram connected successfully!`);
+        
+        const username = params.get('username');
+        if (username) {
+          setInstagramStatus({
+            connected: true,
+            username: username,
+            loading: false,
+          });
+          toast.success(`🎉 Connected to @${username}!`);
+        }
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return true;
+      }
+      
+      // Handle Instagram OAuth callback (manual association needed)
+      if (params.get('instagram_callback')) {
+        console.log("🔄 Processing Instagram OAuth callback...");
+        toast.info("🔄 Processing Instagram connection...");
+        
+        // TODO: Call association endpoint if needed
+        // The backend team mentioned this might be needed for some flows
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return true;
+      }
+      
+      // Handle Instagram connection error
+      if (params.get('instagram_error')) {
+        const errorMessage = params.get('instagram_error');
+        console.error("❌ Instagram connection error:", errorMessage);
+        toast.error(`❌ Instagram connection failed: ${errorMessage}`);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return true;
+      }
+      
+      return false;
+    };
+
     const fetchUserData = async () => {
       if (clerkUser && auth.isSignedIn) {
         try {
+          // First, handle any OAuth callbacks
+          const hasCallback = handleInstagramCallback();
+          
           // Check Instagram status
           console.log("🔄 Checking Instagram status...");
           const statusResult = await checkInstagramStatusSimple(auth, clerkUser, session);

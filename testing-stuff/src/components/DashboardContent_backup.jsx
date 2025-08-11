@@ -36,10 +36,11 @@ const DashboardContent = () => {
   const { user: clerkUser } = useUser();
   const auth = useAuth();
   const { session } = useSession();
-  
   // Use the new Instagram hooks following backend team's implementation
   const { instagramStatus, connectInstagram, refreshStatus } = useInstagram();
   const { processing } = useInstagramCallback(); // Handles all URL parameter scenarios
+
+  const [searchParams] = useSearchParams();
 
   const {
     user,
@@ -53,6 +54,123 @@ const DashboardContent = () => {
     backendConnected,
     refetch,
   } = useUserData();
+
+  // CRITICAL: Handle Instagram OAuth success/error from URL parameters
+  useEffect(() => {
+    const instagramSuccess = searchParams.get("instagram_success");
+    const instagramError = searchParams.get("instagram_error");
+    const username = searchParams.get("username");
+
+    console.log("🔍 Checking Instagram OAuth URL parameters:", {
+      instagramSuccess,
+      instagramError,
+      username,
+      fullURL: window.location.href,
+    });
+
+    if (instagramSuccess) {
+      console.log("✅ Instagram OAuth SUCCESS detected!");
+      toast.success(
+        `🎉 Instagram account @${username} connected successfully!`
+      );
+
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+
+      // Refresh Instagram status
+      refreshInstagramStatus();
+    }
+
+    if (instagramError) {
+      console.error(
+        "❌ Instagram OAuth ERROR detected:",
+        decodeURIComponent(instagramError)
+      );
+      toast.error(
+        `❌ Instagram connection failed: ${decodeURIComponent(instagramError)}`
+      );
+
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [searchParams]);
+
+  // Check Instagram connection status
+  const refreshInstagramStatus = async () => {
+    try {
+      console.log("🔍 Checking Instagram connection status...");
+      
+      // Enhanced token access attempts
+      let token = null;
+      let tokenMethod = null;
+
+      // Method 1: auth.getToken
+      if (!token && typeof auth.getToken === 'function') {
+        try {
+          token = await auth.getToken();
+          tokenMethod = "auth.getToken()";
+          console.log("✅ Token obtained via auth.getToken()");
+        } catch (error) {
+          console.warn("❌ auth.getToken() failed:", error.message);
+        }
+      }
+
+      // Method 2: clerkUser.getToken
+      if (!token && clerkUser && typeof clerkUser.getToken === 'function') {
+        try {
+          token = await clerkUser.getToken();
+          tokenMethod = "clerkUser.getToken()";
+          console.log("✅ Token obtained via clerkUser.getToken()");
+        } catch (error) {
+          console.warn("❌ clerkUser.getToken() failed:", error.message);
+        }
+      }
+
+      // Method 3: session.getToken
+      if (!token && session && typeof session.getToken === 'function') {
+        try {
+          token = await session.getToken();
+          tokenMethod = "session.getToken()";
+          console.log("✅ Token obtained via session.getToken()");
+        } catch (error) {
+          console.warn("❌ session.getToken() failed:", error.message);
+        }
+      }
+
+      if (!token) {
+        console.warn("⚠️ No token available for Instagram status check");
+        setInstagramStatus((prev) => ({ ...prev, loading: false }));
+        return;
+      }
+
+      console.log(`🔑 Using token from ${tokenMethod} for status check`);
+
+      const response = await fetch(
+        "https://vibeBot-v1.onrender.com/api/instagram/status",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("📊 Instagram status response:", data);
+        setInstagramStatus({
+          connected: data.connected || false,
+          username: data.username || null,
+          loading: false,
+        });
+      } else {
+        console.error("❌ Instagram status check failed:", response.status);
+        setInstagramStatus((prev) => ({ ...prev, loading: false }));
+      }
+    } catch (error) {
+      console.error("❌ Error checking Instagram status:", error);
+      setInstagramStatus((prev) => ({ ...prev, loading: false }));
+    }
+  };
 
   // Check Instagram status on component mount
   useEffect(() => {
@@ -73,6 +191,146 @@ const DashboardContent = () => {
     } catch (error) {
       console.error("❌ Failed to initiate Instagram connection:", error);
       toast.error(`❌ Connection failed: ${error.message}`);
+    }
+  };
+    try {
+      console.log("🚀 Connecting to Instagram production endpoint...");
+      
+      // Enhanced logging for debugging
+      console.log("🔍 Debug Info:", {
+        isSignedIn: auth.isSignedIn,
+        hasGetToken: typeof auth.getToken === 'function',
+        hasUser: !!clerkUser,
+        hasSession: !!session,
+        userMethods: clerkUser ? Object.getOwnPropertyNames(Object.getPrototypeOf(clerkUser)) : [],
+        sessionMethods: session ? Object.getOwnPropertyNames(Object.getPrototypeOf(session)) : [],
+        authMethods: Object.getOwnPropertyNames(Object.getPrototypeOf(auth))
+      });
+
+      // Check if user is authenticated
+      if (!auth.isSignedIn || !clerkUser) {
+        console.error("❌ User not signed in");
+        toast.error("Please login first");
+        return;
+      }
+
+      // APPROACH 1: Try to get token via multiple methods with extensive logging
+      let token = null;
+      let tokenMethod = null;
+
+      // Method 1: useAuth getToken
+      if (!token && typeof auth.getToken === 'function') {
+        try {
+          console.log("🔄 Trying auth.getToken()...");
+          token = await auth.getToken();
+          tokenMethod = "auth.getToken()";
+          console.log("✅ Method 1 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 1 failed (auth.getToken):", error.message);
+        }
+      }
+
+      // Method 2: clerkUser getToken
+      if (!token && clerkUser && typeof clerkUser.getToken === 'function') {
+        try {
+          console.log("🔄 Trying clerkUser.getToken()...");
+          token = await clerkUser.getToken();
+          tokenMethod = "clerkUser.getToken()";
+          console.log("✅ Method 2 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 2 failed (clerkUser.getToken):", error.message);
+        }
+      }
+
+      // Method 3: session getToken
+      if (!token && session && typeof session.getToken === 'function') {
+        try {
+          console.log("🔄 Trying session.getToken()...");
+          token = await session.getToken();
+          tokenMethod = "session.getToken()";
+          console.log("✅ Method 3 success:", tokenMethod);
+        } catch (error) {
+          console.warn("❌ Method 3 failed (session.getToken):", error.message);
+        }
+      }
+
+      // APPROACH 2: If token available, use it
+      if (token) {
+        console.log(`🔑 Token obtained via ${tokenMethod}: ✅ Available`);
+        
+        try {
+          console.log("🔄 Calling /api/auth/instagram/initiate with token...");
+          
+          const response = await fetch(
+            "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const data = await response.json();
+          console.log("📥 Response from initiate endpoint:", data);
+
+          if (data.success) {
+            console.log("🚀 Instagram OAuth URL received, redirecting...");
+            toast.success("🔄 Redirecting to Instagram...");
+            window.location.href = data.authUrl;
+            return;
+          } else {
+            console.error("❌ Initiate endpoint returned error:", data.error);
+            // Fall through to next approach
+          }
+        } catch (error) {
+          console.error("❌ Error calling initiate endpoint:", error);
+          // Fall through to next approach
+        }
+      }
+
+      // APPROACH 3: Session-based authentication (no token)
+      console.log("🔄 Trying session-based authentication...");
+      try {
+        const response = await fetch(
+          "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+
+        const data = await response.json();
+        console.log("📥 Session-based response:", data);
+
+        if (data.success) {
+          console.log("🚀 Session-based OAuth URL received, redirecting...");
+          toast.success("🔄 Redirecting to Instagram...");
+          window.location.href = data.authUrl;
+          return;
+        } else {
+          console.error("❌ Session-based approach failed:", data.error);
+          // Fall through to final approach
+        }
+      } catch (error) {
+        console.error("❌ Session-based approach error:", error);
+        // Fall through to final approach
+      }
+
+      // APPROACH 4: Direct redirect (ultimate fallback)
+      console.log("🔄 Using direct redirect as final fallback...");
+      toast.success("🔄 Connecting via secure session...");
+      
+      // Use the original endpoint for direct redirect
+      window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
+
+    } catch (error) {
+      console.error("❌ Fatal error in Instagram connect:", error);
+      toast.error("❌ Failed to connect Instagram. Please try again.");
     }
   };
 
@@ -192,21 +450,11 @@ const DashboardContent = () => {
           <Button
             onClick={handleConnectInstagram}
             size="lg"
-            disabled={processing}
             className="bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
           >
-            {processing ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Processing...
-              </>
-            ) : (
-              <>
-                <Instagram className="mr-2 h-5 w-5" />
-                📸 Connect Instagram Business
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </>
-            )}
+            <Instagram className="mr-2 h-5 w-5" />
+            📸 Connect Instagram Business
+            <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
 
           {/* Security Note */}
@@ -308,7 +556,7 @@ const DashboardContent = () => {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
-              @{instagramStatus?.username || instagram?.username} •{" "}
+              @{instagram?.username} •{" "}
               {instagram?.followers?.toLocaleString() || 0} followers
             </p>
           </div>
@@ -445,7 +693,7 @@ const DashboardContent = () => {
   );
 
   // Loading State
-  if (isLoading || instagramStatus.loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -472,22 +720,15 @@ const DashboardContent = () => {
       {/* Backend Connection Error */}
       {!backendConnected && <BackendErrorBanner />}
 
-      {/* Processing state during OAuth callback */}
-      {processing && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-              <span className="text-blue-700 font-medium">
-                🔄 Processing Instagram connection...
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Main Content */}
-      {!instagramStatus.connected ? (
+      {instagramStatus.loading ? (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>🔍 Checking Instagram connection status...</p>
+          </div>
+        </div>
+      ) : !instagramStatus.connected ? (
         <InstagramNotConnected />
       ) : (
         <div className="space-y-6">
@@ -497,14 +738,15 @@ const DashboardContent = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-green-700 font-medium">
-                  ✅ Instagram @{instagramStatus.username} connected successfully!
+                  ✅ Instagram @{instagramStatus.username} connected
+                  successfully!
                 </span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     console.log("🔄 Refreshing Instagram status...");
-                    refreshStatus();
+                    refreshInstagramStatus();
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />

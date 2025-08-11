@@ -39,7 +39,7 @@ const DashboardContent = () => {
     username: null,
     loading: true,
   });
-  
+
   const {
     user,
     instagram,
@@ -55,34 +55,41 @@ const DashboardContent = () => {
 
   // CRITICAL: Handle Instagram OAuth success/error from URL parameters
   useEffect(() => {
-    const instagramSuccess = searchParams.get('instagram_success');
-    const instagramError = searchParams.get('instagram_error');
-    const username = searchParams.get('username');
+    const instagramSuccess = searchParams.get("instagram_success");
+    const instagramError = searchParams.get("instagram_error");
+    const username = searchParams.get("username");
 
     console.log("🔍 Checking Instagram OAuth URL parameters:", {
       instagramSuccess,
       instagramError,
       username,
-      fullURL: window.location.href
+      fullURL: window.location.href,
     });
 
     if (instagramSuccess) {
       console.log("✅ Instagram OAuth SUCCESS detected!");
-      toast.success(`🎉 Instagram account @${username} connected successfully!`);
-      
+      toast.success(
+        `🎉 Instagram account @${username} connected successfully!`
+      );
+
       // Clean URL
-      window.history.replaceState({}, '', '/dashboard');
-      
+      window.history.replaceState({}, "", "/dashboard");
+
       // Refresh Instagram status
       refreshInstagramStatus();
     }
 
     if (instagramError) {
-      console.error("❌ Instagram OAuth ERROR detected:", decodeURIComponent(instagramError));
-      toast.error(`❌ Instagram connection failed: ${decodeURIComponent(instagramError)}`);
-      
+      console.error(
+        "❌ Instagram OAuth ERROR detected:",
+        decodeURIComponent(instagramError)
+      );
+      toast.error(
+        `❌ Instagram connection failed: ${decodeURIComponent(instagramError)}`
+      );
+
       // Clean URL
-      window.history.replaceState({}, '', '/dashboard');
+      window.history.replaceState({}, "", "/dashboard");
     }
   }, [searchParams]);
 
@@ -90,12 +97,15 @@ const DashboardContent = () => {
   const refreshInstagramStatus = async () => {
     try {
       console.log("🔍 Checking Instagram connection status...");
-      const response = await fetch("https://vibeBot-v1.onrender.com/api/instagram/status", {
-        headers: {
-          Authorization: `Bearer ${await clerkUser?.getToken()}`,
-        },
-      });
-      
+      const response = await fetch(
+        "https://vibeBot-v1.onrender.com/api/instagram/status",
+        {
+          headers: {
+            Authorization: `Bearer ${await clerkUser?.getToken()}`,
+          },
+        }
+      );
+
       if (response.ok) {
         const data = await response.json();
         console.log("📊 Instagram status response:", data);
@@ -106,11 +116,11 @@ const DashboardContent = () => {
         });
       } else {
         console.error("❌ Instagram status check failed:", response.status);
-        setInstagramStatus(prev => ({ ...prev, loading: false }));
+        setInstagramStatus((prev) => ({ ...prev, loading: false }));
       }
     } catch (error) {
       console.error("❌ Error checking Instagram status:", error);
-      setInstagramStatus(prev => ({ ...prev, loading: false }));
+      setInstagramStatus((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -124,30 +134,44 @@ const DashboardContent = () => {
   // Handle Instagram connection redirect
   const handleConnectInstagram = async () => {
     try {
-      console.log("� Connecting to Instagram production endpoint...");
-      
-      // Get Clerk token for authentication
-      const token = await clerkUser?.getToken();
-      
-      if (!token) {
+      console.log("🚀 Connecting to Instagram production endpoint...");
+
+      // Check if user is authenticated
+      if (!clerkUser) {
         toast.error("Please login first");
         return;
       }
-      
-      console.log("🔑 Clerk token obtained:", token ? "✅ Available" : "❌ Missing");
-      
+
+      // Get Clerk token for authentication  
+      const token = await clerkUser.getToken();
+
+      if (!token) {
+        toast.error("Unable to get authentication token. Please try again.");
+        return;
+      }
+
+      console.log(
+        "🔑 Clerk token obtained:",
+        token ? "✅ Available" : "❌ Missing"
+      );
+
       // PRODUCTION: Use production endpoint with proper token authentication
-      const productionEndpoint = "https://vibeBot-v1.onrender.com/api/auth/instagram";
-      
-      console.log("🚀 Redirecting to PRODUCTION Instagram endpoint:", productionEndpoint);
+      const productionEndpoint =
+        "https://vibeBot-v1.onrender.com/api/auth/instagram";
+
+      console.log(
+        "🚀 Redirecting to PRODUCTION Instagram endpoint:",
+        productionEndpoint
+      );
       toast.success("🔄 Connecting to Instagram...");
-      
+
       // Create URL with token parameter for backend authentication
-      const authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(token)}`;
-      
+      const authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(
+        token
+      )}`;
+
       // Direct redirect to production endpoint with authentication
       window.location.href = authenticatedUrl;
-      
     } catch (error) {
       console.error("❌ Failed to initiate Instagram connection:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");
@@ -558,10 +582,11 @@ const DashboardContent = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-green-700 font-medium">
-                  ✅ Instagram @{instagramStatus.username} connected successfully!
+                  ✅ Instagram @{instagramStatus.username} connected
+                  successfully!
                 </span>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => {
                     console.log("🔄 Refreshing Instagram status...");

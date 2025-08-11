@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import {
   getMetaBusinessLoginUrl,
   getInstagramOAuthUrl,
@@ -16,18 +16,24 @@ const InstagramConnectButton = ({
   variant = "primary",
   children = null,
 }) => {
-  const { user, getToken } = useAuth();
+  const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInstagramConnect = async () => {
     try {
       setIsLoading(true);
 
+      // Check if user is authenticated
+      if (!user) {
+        toast.error("Please login first");
+        return;
+      }
+
       // Get the authenticated user's token from Clerk
-      const token = await getToken();
+      const token = await user.getToken();
 
       if (!token) {
-        toast.error("Please login first");
+        toast.error("Unable to get authentication token. Please try again.");
         return;
       }
 

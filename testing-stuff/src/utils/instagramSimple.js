@@ -115,8 +115,12 @@ export const connectInstagramSimple = async (auth, user, session) => {
         throw new Error("User ID not found in profile response");
       }
 
+      // Create state parameter - trying simpler format that backend can parse
       const state = `user_${userId}_${Date.now()}`;
       console.log("🔐 Generated state parameter:", state);
+      console.log("🔍 User ID being used:", userId);
+      console.log("🔍 User ID type:", typeof userId);
+      console.log("🔍 User ID length:", userId.length);
 
       // Step 3: Direct redirect to Instagram OAuth URL (provided by backend team)
       const instagramUrl = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=1807810336807413&redirect_uri=https%3A%2F%2FvibeBot-v1.onrender.com%2Fapi%2Fauth%2Finstagram%2Fcallback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights&state=${state}`;

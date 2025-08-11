@@ -77,7 +77,6 @@ const DashboardContent = () => {
       // Handle successful Instagram connection
       if (params.get('instagram_success')) {
         console.log("✅ Instagram connected successfully!");
-        toast.success(`✅ Instagram connected successfully!`);
         
         const username = params.get('username');
         if (username) {
@@ -87,7 +86,26 @@ const DashboardContent = () => {
             loading: false,
           });
           toast.success(`🎉 Connected to @${username}!`);
+        } else {
+          toast.success(`✅ Instagram connected successfully!`);
         }
+        
+        // Refresh Instagram status from backend
+        const refreshStatus = async () => {
+          try {
+            const status = await checkInstagramStatusSimple(auth, user, session);
+            if (status.connected) {
+              setInstagramStatus({
+                connected: true,
+                username: status.data?.username || username || 'Unknown',
+                loading: false,
+              });
+            }
+          } catch (error) {
+            console.error("Error refreshing Instagram status:", error);
+          }
+        };
+        refreshStatus();
         
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -99,8 +117,56 @@ const DashboardContent = () => {
         console.log("🔄 Processing Instagram OAuth callback...");
         toast.info("🔄 Processing Instagram connection...");
         
-        // TODO: Call association endpoint if needed
-        // The backend team mentioned this might be needed for some flows
+        // Handle manual association if backend provides the data
+        const instagramId = params.get('instagram_id');
+        const instagramUsername = params.get('instagram_username');
+        const instagramToken = params.get('instagram_token');
+        const instagramExpires = params.get('instagram_expires');
+        const instagramAccountType = params.get('instagram_account_type');
+        
+        if (instagramId && instagramUsername && instagramToken) {
+          console.log("📤 Calling manual association endpoint...");
+          
+          const associateInstagram = async () => {
+            try {
+              const { token } = await getClerkToken(auth, user, session);
+              
+              const response = await fetch(
+                "https://vibeBot-v1.onrender.com/api/auth/instagram/associate",
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    instagram_id: instagramId,
+                    username: instagramUsername,
+                    access_token: instagramToken,
+                    expires_at: instagramExpires,
+                    account_type: instagramAccountType,
+                  }),
+                }
+              );
+              
+              if (response.ok) {
+                toast.success(`🎉 Connected to @${instagramUsername}!`);
+                setInstagramStatus({
+                  connected: true,
+                  username: instagramUsername,
+                  loading: false,
+                });
+              } else {
+                toast.error("❌ Failed to associate Instagram account");
+              }
+            } catch (error) {
+              console.error("Association error:", error);
+              toast.error("❌ Connection failed");
+            }
+          };
+          
+          associateInstagram();
+        }
         
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);

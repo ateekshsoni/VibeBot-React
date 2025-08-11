@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
 /**
@@ -13,7 +13,7 @@ const InstagramConnectButton = ({
   variant = "primary",
   children = null,
 }) => {
-  const { user } = useUser();
+  const { getToken, isSignedIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInstagramConnect = async () => {
@@ -22,23 +22,62 @@ const InstagramConnectButton = ({
       console.log("🚀 Connecting to Instagram production endpoint...");
 
       // Check if user is authenticated
-      if (!user) {
+      if (!isSignedIn) {
         toast.error("Please login first");
         return;
       }
 
-      // Get the authenticated user's token from Clerk
+      // Get the authenticated user's token from Clerk with fallback
       let token;
       try {
-        token = await user.getToken();
+        token = await getToken();
       } catch (error) {
-        console.error("Failed to get token:", error);
-        toast.error("Authentication error. Please try again.");
-        return;
+        console.warn("getToken failed, trying fallback approach:", error);
+        
+        // Fallback: Try without token - let backend handle session-based auth
+        try {
+          console.log("🔄 Using session-based authentication fallback");
+          
+          // Call the initiate endpoint without Authorization header
+          // Backend should use session cookies for authentication
+          const response = await fetch(
+            "https://vibeBot-v1.onrender.com/api/auth/instagram/initiate",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include", // Include cookies for session-based auth
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            console.log("🚀 Instagram OAuth URL received (session-based), redirecting...");
+            toast.success("🔄 Redirecting to Instagram...");
+            window.location.href = data.authUrl;
+            return;
+          } else {
+            console.error("❌ Session-based auth also failed:", data.error);
+            toast.error(`❌ Authentication failed: ${data.error}`);
+            return;
+          }
+        } catch (sessionError) {
+          console.error("❌ Session-based fallback failed:", sessionError);
+          toast.error("❌ Authentication error. Please try again.");
+          return;
+        }
       }
 
       if (!token) {
-        toast.error("Please login first");
+        console.warn("No token available, using direct session-based redirect");
+        
+        // Final fallback: Direct redirect to session-based endpoint
+        toast.success("🔄 Connecting via secure session...");
+        
+        // Use the original endpoint but with session-based authentication
+        window.location.href = "https://vibeBot-v1.onrender.com/api/auth/instagram";
         return;
       }
 

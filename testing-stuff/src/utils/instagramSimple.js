@@ -108,7 +108,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
       console.log("👤 User data received:", userData);
 
       // Step 2: Create state parameter with user ID
-      const userId = userData.user?._id || userData.data?._id || userData._id;
+      const userId = userData.user?.id || userData.user?._id || userData.data?.id || userData.data?._id || userData.id || userData._id;
       
       if (!userId) {
         console.error("❌ No user ID found in response:", userData);

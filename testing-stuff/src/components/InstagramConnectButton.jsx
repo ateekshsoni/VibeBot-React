@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useSession } from "@clerk/clerk-react";
 import {
   getMetaBusinessLoginUrl,
   getInstagramOAuthUrl,
@@ -17,6 +17,7 @@ const InstagramConnectButton = ({
   children = null,
 }) => {
   const { user } = useUser();
+  const { session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInstagramConnect = async () => {
@@ -29,8 +30,46 @@ const InstagramConnectButton = ({
         return;
       }
 
-      // Get the authenticated user's token from Clerk
-      const token = await user.getToken();
+      // Get the authenticated user's token from Clerk using multiple fallback methods
+      let token;
+      try {
+        // Method 1: Try user.getToken()
+        if (user && typeof user.getToken === 'function') {
+          token = await user.getToken();
+        }
+      } catch (error) {
+        console.warn("user.getToken failed:", error);
+      }
+
+      if (!token) {
+        try {
+          // Method 2: Try session.getToken()
+          if (session && typeof session.getToken === 'function') {
+            token = await session.getToken();
+          }
+        } catch (error) {
+          console.warn("session.getToken failed:", error);
+        }
+      }
+
+      if (!token) {
+        try {
+          // Method 3: Try with template parameter
+          if (user && typeof user.getToken === 'function') {
+            token = await user.getToken({ template: "default" });
+          }
+        } catch (error) {
+          console.warn("user.getToken with template failed:", error);
+        }
+      }
+
+      if (!token) {
+        // Method 4: Use session ID as fallback
+        if (session && session.id) {
+          console.log("Using session ID as fallback token");
+          token = `session:${session.id}`;
+        }
+      }
 
       if (!token) {
         toast.error("Unable to get authentication token. Please try again.");
@@ -54,11 +93,20 @@ const InstagramConnectButton = ({
       toast.success("🔄 Connecting to Instagram...");
 
       // Create URL with token parameter for backend authentication
-      const authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(
-        token
-      )}`;
+      let authenticatedUrl;
+      if (token.startsWith("session:")) {
+        // For session-based tokens, use a different parameter
+        const sessionId = token.replace("session:", "");
+        authenticatedUrl = `${productionEndpoint}?session_id=${encodeURIComponent(sessionId)}`;
+      } else if (token === "fallback-redirect") {
+        // Direct redirect without token parameter (backend should handle session)
+        authenticatedUrl = productionEndpoint;
+      } else {
+        // Normal flow with token
+        authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(token)}`;
+      }
 
-      // Direct redirect to production endpoint with authentication
+      // Direct redirect to production endpoint
       window.location.href = authenticatedUrl;
     } catch (error) {
       console.error("❌ Error initiating Instagram OAuth:", error);

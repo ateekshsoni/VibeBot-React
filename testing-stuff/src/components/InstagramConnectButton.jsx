@@ -34,7 +34,7 @@ const InstagramConnectButton = ({
       let token;
       try {
         // Method 1: Try user.getToken()
-        if (user && typeof user.getToken === 'function') {
+        if (user && typeof user.getToken === "function") {
           token = await user.getToken();
         }
       } catch (error) {
@@ -44,7 +44,7 @@ const InstagramConnectButton = ({
       if (!token) {
         try {
           // Method 2: Try session.getToken()
-          if (session && typeof session.getToken === 'function') {
+          if (session && typeof session.getToken === "function") {
             token = await session.getToken();
           }
         } catch (error) {
@@ -55,7 +55,7 @@ const InstagramConnectButton = ({
       if (!token) {
         try {
           // Method 3: Try with template parameter
-          if (user && typeof user.getToken === 'function') {
+          if (user && typeof user.getToken === "function") {
             token = await user.getToken({ template: "default" });
           }
         } catch (error) {
@@ -67,7 +67,7 @@ const InstagramConnectButton = ({
         // Method 4: Direct redirect without token (let backend handle authentication via cookies)
         console.log("All token methods failed, using direct redirect approach");
         toast.success("🔄 Connecting to Instagram via session...");
-        
+
         // Direct redirect - let the backend handle authentication via session cookies
         window.location.href = productionEndpoint;
         return;
@@ -94,13 +94,17 @@ const InstagramConnectButton = ({
       if (token.startsWith("session:")) {
         // For session-based tokens, use a different parameter
         const sessionId = token.replace("session:", "");
-        authenticatedUrl = `${productionEndpoint}?session_id=${encodeURIComponent(sessionId)}`;
+        authenticatedUrl = `${productionEndpoint}?session_id=${encodeURIComponent(
+          sessionId
+        )}`;
       } else if (token === "fallback-redirect") {
         // Direct redirect without token parameter (backend should handle session)
         authenticatedUrl = productionEndpoint;
       } else {
         // Normal flow with token
-        authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(token)}`;
+        authenticatedUrl = `${productionEndpoint}?token=${encodeURIComponent(
+          token
+        )}`;
       }
 
       // Direct redirect to production endpoint

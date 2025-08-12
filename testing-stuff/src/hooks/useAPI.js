@@ -54,23 +54,47 @@ export const useAPI = () => {
         console.error(`❌ API Error [${error.config.method?.toUpperCase()}] ${error.config.url} (${duration}ms):`, error.response?.data || error.message);
       }
 
-      // Handle authentication errors
+      // Handle authentication errors - Backend team fixed these!
       if (error.response?.status === 401) {
-        console.warn("Authentication failed - signing out user");
-        try {
-          await signOut();
-        } catch (signOutError) {
-          console.error("Failed to sign out:", signOutError);
+        const errorMessage = error.response?.data?.error || error.response?.data?.message;
+        
+        // Check if it's a temporary auth issue vs real authentication failure
+        if (errorMessage?.includes('Token validation') || errorMessage?.includes('Authentication not implemented')) {
+          console.warn("🔧 Backend authentication temporarily unavailable:", errorMessage);
+          // Don't sign out - just show user-friendly message
+          toast.error("Authentication system temporarily unavailable. Please try again in a moment.");
+        } else {
+          console.warn("🔐 Authentication failed - signing out user");
+          try {
+            await signOut();
+          } catch (signOutError) {
+            console.error("Failed to sign out:", signOutError);
+          }
         }
-        // Don't show toast for auth errors as sign out will redirect
         return Promise.reject(error);
       }
 
-      // Show user-friendly error messages
-      const message = error.response?.data?.message || error.message || "An unexpected error occurred";
+      // Handle 404 errors with helpful messages
+      if (error.response?.status === 404) {
+        const availableEndpoints = error.response?.data?.available_endpoints;
+        if (availableEndpoints) {
+          console.error("🔍 Available endpoints:", availableEndpoints);
+          toast.error("API endpoint not found. Check console for available endpoints.");
+        } else {
+          toast.error("Resource not found");
+        }
+        return Promise.reject(error);
+      }
+
+      // Show user-friendly error messages for other errors
+      const message = error.response?.data?.message || error.response?.data?.error || error.message || "An unexpected error occurred";
       
-      // Don't show toast for network errors on GET requests
-      if (!(error.code === "NETWORK_ERROR" || !error.response) || error.config?.method !== 'get') {
+      // Don't show toast for network errors on GET requests or circuit breaker errors
+      const isNetworkError = error.code === "NETWORK_ERROR" || !error.response;
+      const isCircuitBreakerError = message.includes('Circuit breaker');
+      const isGetRequest = error.config?.method === 'get';
+      
+      if (!((isNetworkError && isGetRequest) || isCircuitBreakerError)) {
         toast.error(message);
       }
 

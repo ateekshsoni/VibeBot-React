@@ -14,6 +14,7 @@ import PublicRoute from "./components/PublicRoute";
 import DashboardWrapper from "./components/DashboardWrapper";
 import BackendTestComponent from "./components/BackendTestComponent";
 import AuthDebugger from "./components/AuthDebugger";
+import AuthTestComponent from "./components/AuthTestComponent";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -143,6 +144,9 @@ function App() {
 
               {/* Backend Test Route (public for testing) */}
               <Route path="/backend-test" element={<BackendTestComponent />} />
+
+              {/* Auth Test Route (public for testing) */}
+              <Route path="/auth-test" element={<AuthTestComponent />} />
 
               {/* Protected Routes */}
               <Route

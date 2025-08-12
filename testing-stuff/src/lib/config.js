@@ -14,8 +14,8 @@ const ENDPOINTS = {
   BACKEND_SYNC: "/api/backend/sync",
   BACKEND_HEALTH: "/api/backend/health",
   BACKEND_CAPABILITIES: "/api/backend/capabilities",
-  
-  // User endpoints  
+
+  // User endpoints
   USER_PROFILE: "/api/user/profile",
   USER_STATS: "/api/user/stats",
   USER_AUTOMATION_SETTINGS: "/api/user/automation-settings",

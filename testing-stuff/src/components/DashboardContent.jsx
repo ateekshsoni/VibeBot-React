@@ -263,7 +263,7 @@ const DashboardContent = () => {
     };
 
     fetchUserData();
-  }, [clerkUser, auth.isSignedIn]);
+  }, [clerkUser?.id, auth.isSignedIn]); // Use only user ID to prevent object reference changes
 
   // Handle Instagram connection redirect using comprehensive token access
   const handleConnectInstagram = async () => {

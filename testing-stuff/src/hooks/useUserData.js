@@ -9,12 +9,17 @@ export const useUserData = () => {
   const { backendUser, isBackendSynced, backendConnected } = useBackendSync();
 
   // Data states
-  const [instagramData, setInstagramData] = useState(null);
+  const [instagramData, setInstagramData] = useState({
+    isConnected: false,
+    username: null,
+    followers: 0,
+    profilePicture: null,
+  }); // Set default state to prevent infinite loops
   const [analyticsData, setAnalyticsData] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
 
   // Loading states
-  const [loadingInstagram, setLoadingInstagram] = useState(true);
+  const [loadingInstagram, setLoadingInstagram] = useState(false); // Set to false since we're not fetching
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
 
@@ -88,7 +93,7 @@ export const useUserData = () => {
     if (!isLoaded || !isBackendSynced) return;
 
     await Promise.all([
-      fetchInstagramStatus(),
+      // fetchInstagramStatus(), // Temporarily disabled to prevent infinite loops
       fetchAnalytics(),
       fetchDashboardData(),
     ]);

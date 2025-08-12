@@ -4,7 +4,10 @@ import InstagramAccountCard from "@/components/InstagramAccountCard";
 import AutomationSettingsCard from "@/components/AutomationSettingsCard";
 import SetupProgressCard from "@/components/SetupProgressCard";
 import ActivityFeedCard from "@/components/ActivityFeedCard";
+import AutomationErrorBoundary from "@/utils/errorBoundary";
 import useAutomationStats from "@/hooks/useAutomationStats";
+import { getCircuitBreakerStatus, resetCircuitBreaker } from "@/utils/circuitBreaker";
+import { AlertTriangle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,6 +34,13 @@ const AutomationPage = () => {
   const [instagramConnected, setInstagramConnected] = useState(false);
   const [automationEnabled, setAutomationEnabled] = useState(false);
   
+  // Circuit breaker status monitoring
+  const [systemStatus, setSystemStatus] = useState({
+    instagram: 'unknown',
+    automation: 'unknown',
+    backendSync: 'unknown'
+  });
+  
   // Use the new automation stats hook
   const {
     stats,
@@ -48,6 +58,34 @@ const AutomationPage = () => {
     setInstagramConnected(stats.instagramConnected);
     setAutomationEnabled(stats.isEnabled);
   }, [stats.instagramConnected, stats.isEnabled]);
+
+  // Monitor circuit breaker status
+  useEffect(() => {
+    const checkSystemStatus = () => {
+      const instagramStatus = getCircuitBreakerStatus('instagram');
+      const automationStatus = getCircuitBreakerStatus('automation');
+      const backendSyncStatus = getCircuitBreakerStatus('backendSync');
+
+      setSystemStatus({
+        instagram: instagramStatus?.state || 'unknown',
+        automation: automationStatus?.state || 'unknown',
+        backendSync: backendSyncStatus?.state || 'unknown'
+      });
+    };
+
+    checkSystemStatus();
+    
+    // Check every 30 seconds
+    const interval = setInterval(checkSystemStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleResetCircuitBreakers = () => {
+    resetCircuitBreaker('instagram');
+    resetCircuitBreaker('automation');
+    resetCircuitBreaker('backendSync');
+    console.log('🔄 All circuit breakers manually reset');
+  };
 
   if (!isSignedIn) {
     return (
@@ -67,18 +105,45 @@ const AutomationPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Instagram Automation Center
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Set up intelligent automation workflows to engage your Instagram audience 24/7
+    <AutomationErrorBoundary 
+      onReset={handleResetCircuitBreakers}
+      systemStatus={systemStatus}
+    >
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        {/* System Status Banner */}
+        {(systemStatus.instagram || systemStatus.backendSync || systemStatus.automation) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <span className="text-amber-800 font-medium">System Protection Active</span>
+              </div>
+              <Button 
+                onClick={handleResetCircuitBreakers}
+                variant="outline" 
+                size="sm"
+                className="text-amber-700 border-amber-300 hover:bg-amber-100"
+              >
+                Reset Protections
+              </Button>
+            </div>
+            <p className="text-amber-700 text-sm mt-2">
+              Some services are temporarily protected to prevent overload. Click reset to retry connections.
             </p>
           </div>
+        )}
+
+        {/* Header */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Instagram Automation Center
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Set up intelligent automation workflows to engage your Instagram audience 24/7
+              </p>
+            </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={refetchStats}
@@ -305,7 +370,8 @@ const AutomationPage = () => {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </AutomationErrorBoundary>
   );
 };
 

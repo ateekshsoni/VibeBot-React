@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 import { API_CONFIG } from '../lib/config';
+import { withCircuitBreaker, getCircuitBreakerStatus } from '../utils/circuitBreaker';
 
 export const useInstagram = () => {
-  const { getToken, isSignedIn } = useAuth(); // Fixed: proper destructuring
+  const { getToken, isSignedIn } = useAuth();
   const [instagramStatus, setInstagramStatus] = useState({
     connected: false,
     username: null,
@@ -12,30 +13,22 @@ export const useInstagram = () => {
     error: null
   });
 
-  // Circuit breaker to prevent infinite loops
-  const [retryCount, setRetryCount] = useState(0);
-  const [lastRetryTime, setLastRetryTime] = useState(0);
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 5000; // 5 seconds
-
   // Backend API base URL from centralized config
   const API_BASE = API_CONFIG.BASE_URL.replace('/api', '');
 
-  // Check Instagram connection status
+  // Check Instagram connection status with circuit breaker protection
   const checkInstagramStatus = async () => {
     try {
-      // Circuit breaker: prevent infinite retries
-      const now = Date.now();
-      if (retryCount >= MAX_RETRIES && (now - lastRetryTime) < RETRY_DELAY) {
-        console.warn('⚠️ Instagram status check circuit breaker active - too many retries');
-        setInstagramStatus(prev => ({ ...prev, loading: false, error: 'Too many retry attempts' }));
+      // Check circuit breaker status first
+      const breakerStatus = getCircuitBreakerStatus('instagram');
+      if (breakerStatus?.isBlocking) {
+        console.warn('🚨 Instagram service temporarily unavailable - circuit breaker active');
+        setInstagramStatus(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: 'Service temporarily unavailable - please try again in a few minutes' 
+        }));
         return;
-      }
-
-      // Reset retry count if enough time has passed
-      if ((now - lastRetryTime) >= RETRY_DELAY * 2) { // Fixed: increased reset time
-        setRetryCount(0);
-        setLastRetryTime(0);
       }
 
       setInstagramStatus(prev => ({ ...prev, loading: true }));
@@ -51,7 +44,7 @@ export const useInstagram = () => {
         return;
       }
 
-      const token = await getToken(); // Fixed: use getToken() properly
+      const token = await getToken();
       if (!token) {
         setInstagramStatus({
           connected: false,
@@ -62,40 +55,41 @@ export const useInstagram = () => {
         return;
       }
 
-      console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/user/instagram/status`);
-      
-      const response = await fetch(`${API_BASE}/api/user/instagram/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // Use circuit breaker for the API call
+      const result = await withCircuitBreaker(
+        'instagram',
+        async () => {
+          console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/user/instagram/status`);
+          
+          const response = await fetch(`${API_BASE}/api/user/instagram/status`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          return response.json();
+        },
+        () => {
+          // Fallback function
+          console.log('📱 Using Instagram status fallback');
+          return { connected: false, username: null };
         }
+      );
+
+      setInstagramStatus({
+        connected: result.connected || false,
+        username: result.username || null,
+        loading: false,
+        error: null
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setInstagramStatus({
-          connected: data.connected || false,
-          username: data.username || null,
-          loading: false,
-          error: null
-        });
-        // Reset retry count on success
-        setRetryCount(0);
-      } else {
-        console.error('❌ Instagram status check failed:', response.status, response.statusText);
-        setRetryCount(prev => prev + 1);
-        setLastRetryTime(now);
-        setInstagramStatus({
-          connected: false,
-          username: null,
-          loading: false,
-          error: `HTTP ${response.status}: ${response.statusText}`
-        });
-      }
     } catch (error) {
       console.error('❌ Error checking Instagram status:', error);
-      setRetryCount(prev => prev + 1);
-      setLastRetryTime(Date.now());
       setInstagramStatus({
         connected: false,
         username: null,
@@ -108,7 +102,7 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-      const token = await getToken(); // Fixed: use getToken() properly
+      const token = await getToken();
       if (!token) throw new Error('No authentication token');
 
       const response = await fetch(`${API_BASE}/api/user/profile`, {
@@ -140,8 +134,23 @@ export const useInstagram = () => {
         throw new Error('Please login first');
       }
       
-      // Get user database ID for state parameter
-      const userId = await getUserDatabaseId();
+      // Check circuit breaker
+      const breakerStatus = getCircuitBreakerStatus('instagram');
+      if (breakerStatus?.isBlocking) {
+        throw new Error('Instagram service temporarily unavailable. Please try again in a few minutes.');
+      }
+      
+      // Get user database ID for state parameter with circuit breaker protection
+      const userId = await withCircuitBreaker(
+        'instagram',
+        () => getUserDatabaseId(),
+        () => {
+          // Fallback: use clerk user ID
+          console.log('Using Clerk user ID as fallback');
+          return isSignedIn ? `clerk_${Date.now()}` : null;
+        }
+      );
+      
       if (!userId) {
         throw new Error('Unable to get user ID');
       }

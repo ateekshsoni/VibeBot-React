@@ -76,12 +76,20 @@ const AutomationSettingsCard = ({ onAutomationChange }) => {
     fetchSettings();
   }, [auth?.isSignedIn, user?.id, session?.id]);
 
-  // Check Instagram status when component mounts
+  // Check Instagram status when component mounts - with debouncing
   useEffect(() => {
-    if (auth?.isSignedIn && user) {
-      checkInstagramStatus();
-    }
-  }, [auth?.isSignedIn, user?.id, checkInstagramStatus]);
+    if (!auth?.isSignedIn || !user) return;
+    
+    // Debounce Instagram status checks to prevent excessive API calls
+    const timeoutId = setTimeout(() => {
+      // Only check if Instagram status is not already loading or circuit breaker is active
+      if (!instagramStatus.loading && !instagramStatus.error?.includes('circuit breaker')) {
+        checkInstagramStatus();
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [auth?.isSignedIn, user?.id]); // Removed checkInstagramStatus from dependencies to prevent loops
 
   const saveSettings = async () => {
     if (!instagramConnected) {

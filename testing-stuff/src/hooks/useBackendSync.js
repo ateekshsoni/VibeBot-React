@@ -56,6 +56,7 @@ export const useBackendSync = () => {
             ? new Date(user.createdAt).toISOString()
             : null,
           updatedAt: new Date().toISOString(),
+          frontendVersion: "1.0.0", // Required by backend
         };
 
         const result = await withCircuitBreaker("backendSync", async () => {
@@ -85,11 +86,16 @@ export const useBackendSync = () => {
 
         // Check if it's a circuit breaker error
         if (error.message.includes("Circuit breaker")) {
+          console.log("🚨 Circuit breaker activated - stopping retries for 5 minutes");
           setSyncCircuitBreakerActive(true);
           // Reset circuit breaker after timeout
           setTimeout(() => {
+            console.log("🔄 Circuit breaker reset - sync available again");
             setSyncCircuitBreakerActive(false);
           }, SYNC_CIRCUIT_BREAKER_DURATION);
+          
+          // Don't continue retrying when circuit breaker is open
+          return;
         }
 
         // Don't block the app on sync failure - allow limited functionality
@@ -109,7 +115,7 @@ export const useBackendSync = () => {
 
   // Auto-sync when user data is available
   useEffect(() => {
-    if (user && isLoaded && !syncCircuitBreakerActive) {
+    if (user && isLoaded && !syncCircuitBreakerActive && !isSyncing) {
       // Check if we're in the middle of an authentication flow
       const isAuthenticationFlow =
         window.location.pathname.includes("/sign-") ||
@@ -130,7 +136,7 @@ export const useBackendSync = () => {
           window.location.pathname.includes("/sign-") ||
           window.location.search.includes("__clerk_");
 
-        if (!stillInAuthFlow && !syncCircuitBreakerActive) {
+        if (!stillInAuthFlow && !syncCircuitBreakerActive && !isSyncing) {
           syncUserWithBackend();
         } else {
           console.log(
@@ -141,7 +147,7 @@ export const useBackendSync = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [user, isLoaded, syncUserWithBackend, syncCircuitBreakerActive]);
+  }, [user?.id, isLoaded, syncCircuitBreakerActive, isSyncing]); // Simplified dependencies
 
   return {
     syncUserWithBackend,

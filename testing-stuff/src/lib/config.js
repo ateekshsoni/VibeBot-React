@@ -11,47 +11,47 @@ const API_CONFIG = {
 
 const ENDPOINTS = {
   // Backend endpoints (corrected based on backend API)
-  BACKEND_SYNC: "/api/backend/sync",
-  BACKEND_HEALTH: "/api/backend/health",
-  BACKEND_CAPABILITIES: "/api/backend/capabilities",
+  BACKEND_SYNC: "/backend/sync",
+  BACKEND_HEALTH: "/backend/health",
+  BACKEND_CAPABILITIES: "/backend/capabilities",
 
   // User endpoints
-  USER_PROFILE: "/api/user/profile",
-  USER_STATS: "/api/user/stats",
-  USER_AUTOMATION_SETTINGS: "/api/user/automation-settings",
-  USER_INSTAGRAM_STATUS: "/api/user/instagram/status",
+  USER_PROFILE: "/user/profile",
+  USER_STATS: "/user/stats",
+  USER_AUTOMATION_SETTINGS: "/user/automation-settings",
+  USER_INSTAGRAM_STATUS: "/user/instagram/status",
 
   // Auth endpoints
-  AUTH_ME: "/api/auth/me",
-  AUTH_INSTAGRAM: "/api/auth/instagram",
-  AUTH_INSTAGRAM_CALLBACK: "/api/auth/instagram/callback",
-  AUTH_INSTAGRAM_DISCONNECT: "/api/auth/instagram/disconnect",
-  AUTH_WEBHOOK: "/api/auth/webhook",
+  AUTH_ME: "/auth/me",
+  AUTH_INSTAGRAM: "/auth/instagram",
+  AUTH_INSTAGRAM_CALLBACK: "/auth/instagram/callback",
+  AUTH_INSTAGRAM_DISCONNECT: "/auth/instagram/disconnect",
+  AUTH_WEBHOOK: "/auth/webhook",
 
   // Instagram endpoints
-  INSTAGRAM_STATUS: "/api/instagram/status",
-  INSTAGRAM_POSTS: "/api/instagram/posts",
-  INSTAGRAM_WEBHOOK: "/api/instagram/webhook",
+  INSTAGRAM_STATUS: "/instagram/status",
+  INSTAGRAM_POSTS: "/instagram/posts",
+  INSTAGRAM_WEBHOOK: "/instagram/webhook",
 
   // Automation endpoints
-  AUTOMATION_SETTINGS: "/api/automation/settings",
-  AUTOMATION_STATS: "/api/automation/stats",
-  AUTOMATION_TEST: "/api/automation/test",
+  AUTOMATION_SETTINGS: "/automation/settings",
+  AUTOMATION_STATS: "/automation/stats",
+  AUTOMATION_TEST: "/automation/test",
 
   // Analytics endpoints
-  ANALYTICS_OVERVIEW: "/api/analytics/overview",
-  ANALYTICS_PERFORMANCE: "/api/analytics/performance",
-  ANALYTICS_AUTOMATION: "/api/analytics/automation",
-  ANALYTICS_INSTAGRAM: "/api/analytics/instagram",
+  ANALYTICS_OVERVIEW: "/analytics/overview",
+  ANALYTICS_PERFORMANCE: "/analytics/performance",
+  ANALYTICS_AUTOMATION: "/analytics/automation",
+  ANALYTICS_INSTAGRAM: "/analytics/instagram",
 
   // Other endpoints
-  FLOWS: "/api/flows",
-  DASHBOARD: "/api/dashboard",
-  TEMPLATES: "/api/templates",
-  CONVERSATIONS: "/api/conversations",
-  BROADCAST: "/api/broadcast",
+  FLOWS: "/flows",
+  DASHBOARD: "/dashboard",
+  TEMPLATES: "/templates",
+  CONVERSATIONS: "/conversations",
+  BROADCAST: "/broadcast",
 
-  // Health check
+  // Health check (without /api prefix)
   HEALTH: "/health",
 };
 

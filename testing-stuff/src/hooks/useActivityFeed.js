@@ -64,14 +64,20 @@ export const useActivityFeed = (initialLimit = 10) => {
       console.error('Failed to fetch activity feed:', err);
       setError(err.message);
       
-      // Set empty state on error if no activities exist
-      if (!append && activities.length === 0) {
+      // Set empty state on error to prevent infinite loops
+      if (!append) {
         setActivities([]);
+        setPagination({
+          limit: initialLimit,
+          offset: 0,
+          total: 0,
+          hasMore: false
+        });
       }
     } finally {
       setLoading(false);
     }
-  }, [get, initialLimit, activities.length]);
+  }, [get, initialLimit]); // Removed activities.length dependency causing infinite loop
 
   const loadMore = async () => {
     if (pagination.hasMore && !loading) {
@@ -87,7 +93,8 @@ export const useActivityFeed = (initialLimit = 10) => {
   // Initial fetch
   useEffect(() => {
     fetchActivities();
-  }, [fetchActivities]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount to prevent infinite loops
 
   // Auto-refresh every 2 minutes to get new activities
   useEffect(() => {
@@ -99,7 +106,7 @@ export const useActivityFeed = (initialLimit = 10) => {
     }, 120000); // 2 minutes to reduce load
 
     return () => clearInterval(interval);
-  }, [fetchActivities, pagination.offset, pagination.limit]); // Fixed dependencies
+  }, [pagination.offset, pagination.limit]); // Removed fetchActivities dependency
 
   // Helper function to get activities by type
   const getActivitiesByType = (type) => {

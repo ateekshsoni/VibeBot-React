@@ -3,9 +3,11 @@ import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 import { API_CONFIG } from '../lib/config';
 import { withCircuitBreaker, getCircuitBreakerStatus } from '../utils/circuitBreaker';
+import { useAPI } from './useAPI';
 
 export const useInstagram = () => {
   const { getToken, isSignedIn } = useAuth();
+  const { get, post } = useAPI();
   const [instagramStatus, setInstagramStatus] = useState({
     connected: false,
     username: null,
@@ -13,16 +15,16 @@ export const useInstagram = () => {
     error: null
   });
 
-  // Backend API base URL from centralized config
-  const API_BASE = API_CONFIG.BASE_URL.replace('/api', '');
+  // Circuit breaker protection for Instagram status checks
+  const [circuitBreakerActive, setCircuitBreakerActive] = useState(false);
 
   // Check Instagram connection status with circuit breaker protection
   const checkInstagramStatus = async () => {
     try {
       // Check circuit breaker status first
       const breakerStatus = getCircuitBreakerStatus('instagram');
-      if (breakerStatus?.isBlocking) {
-        console.warn('🚨 Instagram service temporarily unavailable - circuit breaker active');
+      if (breakerStatus?.isBlocking || circuitBreakerActive) {
+        console.warn('⚠️ Instagram status check circuit breaker active - too many retries');
         setInstagramStatus(prev => ({ 
           ...prev, 
           loading: false, 
@@ -44,35 +46,13 @@ export const useInstagram = () => {
         return;
       }
 
-      const token = await getToken();
-      if (!token) {
-        setInstagramStatus({
-          connected: false,
-          username: null,
-          loading: false,
-          error: 'Authentication token not available'
-        });
-        return;
-      }
-
-      // Use circuit breaker for the API call
+      // Use circuit breaker for the API call with proper endpoint
       const result = await withCircuitBreaker(
         'instagram',
         async () => {
-          console.log('🔍 Checking Instagram status with URL:', `${API_BASE}/api/user/instagram/status`);
-          
-          const response = await fetch(`${API_BASE}/api/user/instagram/status`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          return response.json();
+          // Use the proper useAPI hook with correct endpoint
+          const response = await get('/user/instagram/status');
+          return response;
         },
         () => {
           // Fallback function
@@ -90,11 +70,20 @@ export const useInstagram = () => {
 
     } catch (error) {
       console.error('❌ Error checking Instagram status:', error);
+      
+      // Activate local circuit breaker for too many failures
+      if (error.message.includes('401') || error.message.includes('authentication')) {
+        console.log('🔒 Authentication failed - token may be invalid or expired');
+        setCircuitBreakerActive(true);
+        // Reset after 5 minutes
+        setTimeout(() => setCircuitBreakerActive(false), 300000);
+      }
+      
       setInstagramStatus({
         connected: false,
         username: null,
         loading: false,
-        error: error.message
+        error: 'Authentication failed'
       });
     }
   };
@@ -102,22 +91,8 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-      const token = await getToken();
-      if (!token) throw new Error('No authentication token');
-
-      const response = await fetch(`${API_BASE}/api/user/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get user profile');
-      }
-
-      const data = await response.json();
-      return data.user?._id || data.user?.id;
+      const response = await get('/user/profile');
+      return response.user?._id || response.user?.id;
     } catch (error) {
       console.error('Error getting user database ID:', error);
       throw error;
@@ -136,7 +111,7 @@ export const useInstagram = () => {
       
       // Check circuit breaker
       const breakerStatus = getCircuitBreakerStatus('instagram');
-      if (breakerStatus?.isBlocking) {
+      if (breakerStatus?.isBlocking || circuitBreakerActive) {
         throw new Error('Instagram service temporarily unavailable. Please try again in a few minutes.');
       }
       
@@ -160,7 +135,7 @@ export const useInstagram = () => {
       const params = new URLSearchParams({
         force_reauth: 'true',
         client_id: '1807810336807413',
-        redirect_uri: `${API_BASE}/api/auth/instagram/callback`,
+        redirect_uri: `${API_CONFIG.BASE_URL.replace('/api', '')}/api/auth/instagram/callback`,
         response_type: 'code',
         scope: 'instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights',
         state: `user_${userId}_${Date.now()}`
@@ -186,32 +161,13 @@ export const useInstagram = () => {
     try {
       console.log('🔄 Associating Instagram data with user...');
       
-      const token = await getToken(); // Fixed: use getToken() properly
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await fetch(`${API_BASE}/api/auth/instagram/associate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          instagram_token: instagramData.instagram_token,
-          instagram_id: instagramData.instagram_id,
-          instagram_username: instagramData.instagram_username,
-          instagram_expires: instagramData.instagram_expires,
-          instagram_account_type: instagramData.instagram_account_type
-        })
+      const result = await post('/auth/instagram/associate', {
+        instagram_token: instagramData.instagram_token,
+        instagram_id: instagramData.instagram_id,
+        instagram_username: instagramData.instagram_username,
+        instagram_expires: instagramData.instagram_expires,
+        instagram_account_type: instagramData.instagram_account_type
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to associate Instagram account');
-      }
-
-      const result = await response.json();
       
       // Update status after successful association
       await checkInstagramStatus();
@@ -226,20 +182,7 @@ export const useInstagram = () => {
   // Disconnect Instagram
   const disconnectInstagram = async () => {
     try {
-      const token = await getToken(); // Fixed: use getToken() properly
-      if (!token) throw new Error('Authentication required');
-
-      const response = await fetch(`${API_BASE}/api/auth/instagram/disconnect`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to disconnect Instagram');
-      }
+      await post('/auth/instagram/disconnect');
 
       // Update status after disconnection
       setInstagramStatus({
@@ -256,6 +199,15 @@ export const useInstagram = () => {
       throw error;
     }
   };
+
+  // Only check Instagram status on mount, not in a loop
+  useEffect(() => {
+    if (isSignedIn && !circuitBreakerActive) {
+      // Only check once on mount to prevent infinite loops
+      checkInstagramStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]); // Only depend on authentication status
 
   return {
     instagramStatus,

@@ -59,7 +59,7 @@ export const useBackendSync = () => {
         };
 
         const result = await withCircuitBreaker("backendSync", async () => {
-          const response = await makeAuthenticatedRequest("/api/backend/sync", {
+          const response = await makeAuthenticatedRequest("/backend/sync", {
             method: "POST",
             body: JSON.stringify(userData),
           });

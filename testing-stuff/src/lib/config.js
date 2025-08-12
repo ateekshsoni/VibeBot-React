@@ -1,0 +1,53 @@
+// Centralized API configuration to prevent conflicts
+const API_CONFIG = {
+  // Normalize the API URL to prevent case sensitivity issues
+  BASE_URL:
+    import.meta.env.VITE_API_URL?.toLowerCase() ||
+    "https://vibebot-v1.onrender.com/api",
+  TIMEOUT: 30000,
+  RETRY_ATTEMPTS: 3,
+  RETRY_DELAY: 1000,
+};
+
+const ENDPOINTS = {
+  // User endpoints
+  USER_SYNC: "/user/sync",
+  USER_PROFILE: "/user/profile",
+  USER_AUTOMATION_STATS: "/user/automation/stats",
+  USER_ACTIVITY: "/user/activity",
+  USER_INSTAGRAM_STATUS: "/user/instagram/status",
+
+  // Auth endpoints
+  AUTH_INSTAGRAM: "/auth/instagram",
+  AUTH_INSTAGRAM_CALLBACK: "/auth/instagram/callback",
+  AUTH_INSTAGRAM_ASSOCIATE: "/auth/instagram/associate",
+  AUTH_INSTAGRAM_DISCONNECT: "/auth/instagram/disconnect",
+
+  // Health check
+  HEALTH: "/health",
+};
+
+const CLERK_CONFIG = {
+  PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+  SIGN_IN_URL: "/sign-in",
+  SIGN_UP_URL: "/sign-up",
+  AFTER_SIGN_IN_URL: "/dashboard",
+  AFTER_SIGN_UP_URL: "/dashboard",
+};
+
+const INSTAGRAM_CONFIG = {
+  CLIENT_ID: import.meta.env.VITE_INSTAGRAM_CLIENT_ID || "1807810336807413",
+  REDIRECT_URI: `${API_CONFIG.BASE_URL.replace(
+    "/api",
+    ""
+  )}/auth/instagram/callback`,
+  SCOPES: [
+    "instagram_business_basic",
+    "instagram_business_manage_messages",
+    "instagram_business_manage_comments",
+    "instagram_business_content_publish",
+    "instagram_business_manage_insights",
+  ].join(","),
+};
+
+export { API_CONFIG, ENDPOINTS, CLERK_CONFIG, INSTAGRAM_CONFIG };

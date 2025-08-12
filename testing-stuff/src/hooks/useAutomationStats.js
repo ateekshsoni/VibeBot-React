@@ -78,16 +78,16 @@ export const useAutomationStats = () => {
     fetchStats();
   }, []);
 
-  // Auto-refresh every 30 seconds if automation is enabled
+  // Auto-refresh every 60 seconds if automation is enabled
   useEffect(() => {
     if (!stats.isEnabled) return;
 
     const interval = setInterval(() => {
       fetchStats();
-    }, 30000); // 30 seconds
+    }, 60000); // 60 seconds to reduce load
 
     return () => clearInterval(interval);
-  }, [stats.isEnabled]);
+  }, [stats.isEnabled]); // Removed lastFetch dependency to prevent infinite loops
 
   return {
     stats,

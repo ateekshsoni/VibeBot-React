@@ -21,11 +21,13 @@ const ProtectedRoute = ({ children }) => {
   // If user is not signed in, redirect to sign-in page
   if (!isSignedIn) {
     console.log("🔒 User not authenticated, redirecting to sign-in");
+    console.log("🔍 Current location:", location.pathname);
     return <Navigate to="/sign-in" state={{ from: location }} replace />;
   }
 
   // If user is authenticated, render the protected content
   console.log("✅ User authenticated, rendering protected route");
+  console.log("📍 Rendering protected content for:", location.pathname);
   return children;
 };
 

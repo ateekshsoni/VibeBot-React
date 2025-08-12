@@ -89,17 +89,17 @@ export const useActivityFeed = (initialLimit = 10) => {
     fetchActivities();
   }, []);
 
-  // Auto-refresh every 60 seconds to get new activities
+  // Auto-refresh every 2 minutes to get new activities
   useEffect(() => {
     const interval = setInterval(() => {
       // Only auto-refresh if we're showing the first page
       if (pagination.offset === 0) {
         fetchActivities(pagination.limit, 0, false);
       }
-    }, 60000); // 60 seconds
+    }, 120000); // 2 minutes to reduce load
 
     return () => clearInterval(interval);
-  }, [pagination.offset, pagination.limit]);
+  }, []); // Empty dependency array to prevent infinite loops
 
   // Helper function to get activities by type
   const getActivitiesByType = (type) => {

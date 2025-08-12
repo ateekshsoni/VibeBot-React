@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
+import { API_CONFIG } from '../lib/config';
 
 export const useInstagram = () => {
-  const auth = useAuth(); // Don't destructure, use the full auth object
+  const { getToken, isSignedIn } = useAuth(); // Fixed: proper destructuring
   const [instagramStatus, setInstagramStatus] = useState({
     connected: false,
     username: null,
@@ -17,8 +18,8 @@ export const useInstagram = () => {
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 5000; // 5 seconds
 
-  // Backend API base URL
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://vibeBot-v1.onrender.com';
+  // Backend API base URL from centralized config
+  const API_BASE = API_CONFIG.BASE_URL.replace('/api', '');
 
   // Check Instagram connection status
   const checkInstagramStatus = async () => {
@@ -32,14 +33,15 @@ export const useInstagram = () => {
       }
 
       // Reset retry count if enough time has passed
-      if ((now - lastRetryTime) >= RETRY_DELAY) {
+      if ((now - lastRetryTime) >= RETRY_DELAY * 2) { // Fixed: increased reset time
         setRetryCount(0);
+        setLastRetryTime(0);
       }
 
       setInstagramStatus(prev => ({ ...prev, loading: true }));
       
       // Check if user is authenticated first
-      if (!auth.isSignedIn) {
+      if (!isSignedIn) {
         setInstagramStatus({
           connected: false,
           username: null,
@@ -49,7 +51,7 @@ export const useInstagram = () => {
         return;
       }
 
-      const token = await auth.getToken(); // Use auth.getToken() instead of getToken()
+      const token = await getToken(); // Fixed: use getToken() properly
       if (!token) {
         setInstagramStatus({
           connected: false,
@@ -106,7 +108,7 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-      const token = await auth.getToken(); // Fix: use auth.getToken()
+      const token = await getToken(); // Fixed: use getToken() properly
       if (!token) throw new Error('No authentication token');
 
       const response = await fetch(`${API_BASE}/api/user/profile`, {
@@ -134,7 +136,7 @@ export const useInstagram = () => {
       console.log('🔄 Starting Instagram connection...');
       
       // Check if user is authenticated first
-      if (!auth.isSignedIn) {
+      if (!isSignedIn) {
         throw new Error('Please login first');
       }
       
@@ -149,7 +151,7 @@ export const useInstagram = () => {
       const params = new URLSearchParams({
         force_reauth: 'true',
         client_id: '1807810336807413',
-        redirect_uri: 'https://vibeBot-v1.onrender.com/api/auth/instagram/callback',
+        redirect_uri: `${API_BASE}/api/auth/instagram/callback`,
         response_type: 'code',
         scope: 'instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights',
         state: `user_${userId}_${Date.now()}`
@@ -175,7 +177,7 @@ export const useInstagram = () => {
     try {
       console.log('🔄 Associating Instagram data with user...');
       
-      const token = await auth.getToken(); // Fix: use auth.getToken()
+      const token = await getToken(); // Fixed: use getToken() properly
       if (!token) {
         throw new Error('Authentication required');
       }
@@ -215,7 +217,7 @@ export const useInstagram = () => {
   // Disconnect Instagram
   const disconnectInstagram = async () => {
     try {
-      const token = await auth.getToken(); // Fix: use auth.getToken()
+      const token = await getToken(); // Fixed: use getToken() properly
       if (!token) throw new Error('Authentication required');
 
       const response = await fetch(`${API_BASE}/api/auth/instagram/disconnect`, {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useBackendSync } from "../hooks/useBackendSync";
 import DashboardLayout from "./layout/DashboardLayout";
@@ -7,6 +7,7 @@ const DashboardWrapper = ({ children }) => {
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { user, isLoaded: userLoaded } = useUser();
   const { isBackendSynced, syncLoading, backendConnected, syncError } = useBackendSync();
+  const [allowContinue, setAllowContinue] = useState(false);
 
   // Wait for auth to load
   if (!authLoaded || !userLoaded) {
@@ -25,8 +26,30 @@ const DashboardWrapper = ({ children }) => {
     return null;
   }
 
+  useEffect(() => {
+    // Check if we just came from authentication
+    const isPostAuth = window.location.search.includes('__clerk_') || 
+                      sessionStorage.getItem('clerk-redirect-in-progress') ||
+                      window.location.pathname === '/dashboard';
+
+    if (isPostAuth) {
+      console.log('🔄 Post-authentication detected, allowing immediate access');
+      setAllowContinue(true);
+      // Clear the redirect flag
+      sessionStorage.removeItem('clerk-redirect-in-progress');
+    } else {
+      // For regular dashboard access, allow a brief sync check
+      const timer = setTimeout(() => {
+        console.log('🔄 Dashboard wrapper allowing access after timeout');
+        setAllowContinue(true);
+      }, 1000); // Reduced timeout for better UX
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, isLoaded]);
+
   // Show sync loading for a limited time, then continue even if backend fails
-  if (syncLoading && backendConnected && !syncError) {
+  if (syncLoading && !allowContinue && backendConnected && !syncError) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">

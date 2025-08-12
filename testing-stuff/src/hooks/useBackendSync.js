@@ -1,209 +1,123 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useAPI } from "./useAPI";
 import { toast } from "react-hot-toast";
 
 export const useBackendSync = () => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user: clerkUser } = useUser();
-  const { get, post, healthCheck } = useAPI();
-  
-  const [backendUser, setBackendUser] = useState(null);
+  const { user, isLoaded } = useUser();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("idle"); // 'idle', 'syncing', 'success', 'error'
   const [isBackendSynced, setIsBackendSynced] = useState(false);
-  const [syncLoading, setSyncLoading] = useState(false);
+  const [backendConnected, setBackendConnected] = useState(false);
   const [syncError, setSyncError] = useState(null);
-  const [backendConnected, setBackendConnected] = useState(true);
+  const [backendUser, setBackendUser] = useState(null);
+  const { makeAuthenticatedRequest } = useAPI();
 
-  // Sync user with backend
-  const syncUserWithBackend = async () => {
-    if (!isSignedIn || !clerkUser) return;
+  const syncUserWithBackend = useCallback(
+    async (manualSync = false) => {
+      if (!user || !isLoaded) {
+        console.log("🔄 Backend sync skipped - user not ready");
+        return;
+      }
 
-    try {
-      setSyncLoading(true);
-      setSyncError(null);
-      console.log("🔄 Syncing user with backend...", clerkUser.emailAddresses[0]?.emailAddress);
+      // Skip auto-sync if already syncing to prevent conflicts
+      if (!manualSync && isSyncing) {
+        console.log("🔄 Backend sync skipped - already syncing");
+        return;
+      }
 
-      // First, try to get existing user profile
-      let userProfile;
       try {
-        const response = await get("/user/profile");
-        userProfile = response.user || response.data?.user || response;
-        setBackendUser(userProfile);
-        setIsBackendSynced(true);
-        setBackendConnected(true);
-        
-        console.log("✅ User already exists in backend:", userProfile);
-        return userProfile;
-      } catch (error) {
-        // If user doesn't exist (404), create new user
-        const isNotFound = error.response?.status === 404 || 
-                          error.statusCode === 404 ||
-                          error.message?.includes('404') || 
-                          error.message?.includes('User not found') ||
-                          error.message?.includes('not found');
-        
-        if (isNotFound) {
-          console.log("📝 Creating new user in backend...");
-          
-          const newUserData = {
-            clerkId: clerkUser.id,
-            email: clerkUser.emailAddresses[0]?.emailAddress,
-            firstName: clerkUser.firstName || "",
-            lastName: clerkUser.lastName || "",
-            profileImageUrl: clerkUser.imageUrl,
-            username: clerkUser.username || "",
-            phoneNumber: clerkUser.phoneNumbers[0]?.phoneNumber || "",
-            metadata: {
-              createdAt: new Date().toISOString(),
-              source: "frontend",
-              version: "1.0.0"
-            }
-          };
+        setIsSyncing(true);
+        setSyncStatus("syncing");
+        setSyncError(null);
+        console.log("🔄 Starting backend sync for user:", user.id);
 
-          const createResponse = await post("/auth/sync", newUserData);
-          userProfile = createResponse.user || createResponse.data?.user || createResponse;
-          setBackendUser(userProfile);
+        const userData = {
+          clerkUserId: user.id,
+          email: user.primaryEmailAddress?.emailAddress,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.imageUrl,
+          createdAt: user.createdAt
+            ? new Date(user.createdAt).toISOString()
+            : null,
+          updatedAt: new Date().toISOString(),
+        };
+
+        const response = await makeAuthenticatedRequest("/user/sync", {
+          method: "POST",
+          body: JSON.stringify(userData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log("✅ Backend sync successful:", result);
+          setSyncStatus("success");
           setIsBackendSynced(true);
           setBackendConnected(true);
-          
-          console.log("✅ New user created in backend:", userProfile);
-          toast.success("Welcome! Your account has been set up.");
-          return userProfile;
+          setBackendUser(result.user || result);
         } else {
-          throw error;
+          throw new Error(`Sync failed: ${response.status}`);
         }
-      }
-    } catch (error) {
-      console.error("❌ Backend sync error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Unknown sync error";
-      setSyncError(errorMessage);
-      setIsBackendSynced(false);
-      
-      // Check if it's a connection error
-      if (error.isNetworkError || error.code === 'NETWORK_ERROR' || !error.response) {
+      } catch (error) {
+        console.error("❌ Backend sync error:", error);
+        setSyncStatus("error");
+        setSyncError(error.message);
         setBackendConnected(false);
-        console.warn("🔌 Backend connection failed - app will work with limited functionality");
-        // Don't show error toast for network issues in production
-        if (import.meta.env.NODE_ENV === "development") {
-          toast.error("Backend connection failed. Some features may be limited.");
-        }
-      } else if (error.response?.status !== 401) {
-        // Don't show toast for auth errors as they're handled by the auth system
-        toast.error("Failed to sync with backend: " + errorMessage);
+        // Don't block the app on sync failure
+        setIsBackendSynced(true); // Allow app to continue with limited functionality
+      } finally {
+        setIsSyncing(false);
       }
-    } finally {
-      setSyncLoading(false);
-    }
-  };
+    },
+    [user, isLoaded, makeAuthenticatedRequest] // Removed isSyncing to prevent infinite loops
+  );
 
-  // Check backend health using the useAPI health check method
-  const checkBackendHealth = async () => {
-    try {
-      const healthData = await healthCheck();
-      setBackendConnected(true);
-      console.log("✅ Backend health check passed:", healthData);
-      return healthData;
-    } catch (error) {
-      console.error("❌ Backend health check failed:", error);
-      setBackendConnected(false);
-      return null;
-    }
-  };
-
-  // Auto-sync when user is loaded
+  // Auto-sync when user data is available
+  // Disable auto-sync temporarily to prevent interference with Clerk redirects
   useEffect(() => {
-    if (isLoaded && isSignedIn && clerkUser && !isBackendSynced && !syncLoading) {
-      // Add a longer delay to prevent conflicts with Clerk's internal processes and redirects
+    if (user && isLoaded) {
+      // Check if we're in the middle of an authentication flow
+      const isAuthenticationFlow =
+        window.location.pathname.includes("/sign-") ||
+        window.location.search.includes("__clerk_") ||
+        sessionStorage.getItem("clerk-redirect-in-progress");
+
+      if (isAuthenticationFlow) {
+        console.log(
+          "🔄 Backend sync skipped - authentication flow in progress"
+        );
+        return;
+      }
+
+      // Add a delay and only sync if we're not in auth flow
       const timer = setTimeout(() => {
-        // Double-check user is still signed in before attempting sync
-        if (isSignedIn && clerkUser) {
-          // First check backend health, then sync user
-          checkBackendHealth().then((isHealthy) => {
-            if (isHealthy !== null) {
-              // Only attempt sync if backend is healthy
-              syncUserWithBackend();
-            } else {
-              console.warn("⚠️ Backend unhealthy - skipping user sync");
-              setBackendConnected(false);
-              // Still mark as "synced" to allow app to function
-              setIsBackendSynced(true);
-            }
-          });
+        // Double-check we're not in auth flow after the delay
+        const stillInAuthFlow =
+          window.location.pathname.includes("/sign-") ||
+          window.location.search.includes("__clerk_");
+
+        if (!stillInAuthFlow) {
+          syncUserWithBackend();
+        } else {
+          console.log(
+            "🔄 Backend sync skipped - still in auth flow after delay"
+          );
         }
-      }, 2000); // Increased delay to 2 seconds to avoid conflicts with auth flow
+      }, 2000); // Increased back to 2 seconds to give Clerk time to complete redirect
 
       return () => clearTimeout(timer);
     }
-  }, [isLoaded, isSignedIn, clerkUser, isBackendSynced, syncLoading]);
-
-  // Refresh user data from backend
-  const refreshBackendUser = async () => {
-    if (!isSignedIn) return;
-    
-    try {
-      setSyncLoading(true);
-      const response = await get("/user/profile");
-      const userData = response.user || response.data?.user || response;
-      setBackendUser(userData);
-      setIsBackendSynced(true);
-      setBackendConnected(true);
-      console.log("🔄 Refreshed user data from backend:", userData);
-      return userData;
-    } catch (error) {
-      console.error("Failed to refresh user data:", error);
-      if (error.isNetworkError) {
-        setBackendConnected(false);
-      }
-      throw error;
-    } finally {
-      setSyncLoading(false);
-    }
-  };
-
-  // Update user profile in backend
-  const updateBackendUser = async (updates) => {
-    if (!isSignedIn) throw new Error("User not signed in");
-    
-    try {
-      setSyncLoading(true);
-      const response = await post("/user/profile", updates);
-      const updatedUser = response.user || response.data?.user || response;
-      setBackendUser(updatedUser);
-      console.log("✅ Updated user profile in backend:", updatedUser);
-      toast.success("Profile updated successfully");
-      return updatedUser;
-    } catch (error) {
-      console.error("Failed to update user profile:", error);
-      toast.error("Failed to update profile");
-      throw error;
-    } finally {
-      setSyncLoading(false);
-    }
-  };
-
-  // Force re-sync (useful for debugging or manual refresh)
-  const forceSync = async () => {
-    setIsBackendSynced(false);
-    setSyncError(null);
-    return syncUserWithBackend();
-  };
+  }, [user, isLoaded, syncUserWithBackend]);
 
   return {
-    // User data
-    backendUser,
-    clerkUser,
-    
-    // Sync states
-    isBackendSynced,
-    syncLoading,
-    syncError,
-    backendConnected,
-    
-    // Actions
     syncUserWithBackend,
-    refreshBackendUser,
-    updateBackendUser,
-    checkBackendHealth,
-    forceSync,
+    isSyncing,
+    syncStatus,
+    isBackendSynced,
+    backendConnected,
+    syncError,
+    backendUser,
+    syncLoading: isSyncing,
   };
 };

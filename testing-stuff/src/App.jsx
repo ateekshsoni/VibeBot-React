@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import DashboardWrapper from "./components/DashboardWrapper";
 import BackendTestComponent from "./components/BackendTestComponent";
+import AuthDebugger from "./components/AuthDebugger";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -301,6 +302,9 @@ function App() {
               },
             }}
           />
+
+          {/* Temporary Auth Debugger - remove in production */}
+          <AuthDebugger />
         </Router>
       </ClerkProvider>
     </ErrorBoundary>

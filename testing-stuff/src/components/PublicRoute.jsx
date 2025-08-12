@@ -20,6 +20,7 @@ const PublicRoute = ({ children }) => {
   // If user is already signed in, redirect to dashboard
   if (isSignedIn) {
     console.log("✅ User already authenticated, redirecting to dashboard");
+    console.log("📍 Redirecting from public route to /dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 

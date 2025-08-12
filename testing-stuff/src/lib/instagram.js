@@ -1,18 +1,11 @@
 import api from './api';
+import { API_CONFIG, INSTAGRAM_CONFIG } from './config';
 
-// Instagram OAuth configuration and utilities
-export const INSTAGRAM_CONFIG = {
-  CLIENT_ID: "1807810336807413",
-  // Updated to match the exact redirect URI from your Meta console
-  REDIRECT_URI: "https://vibeBot-v1.onrender.com/api/auth/instagram/callback",
-  SCOPES: [
-    "instagram_business_basic",
-    "instagram_business_manage_messages",
-    "instagram_business_manage_comments",
-    "instagram_business_content_publish",
-    "instagram_business_manage_insights",
-  ].join(","),
-  // Business login base URL as specified by Meta
+// Instagram OAuth configuration and utilities - now using centralized config
+export const LEGACY_INSTAGRAM_CONFIG = {
+  CLIENT_ID: INSTAGRAM_CONFIG.CLIENT_ID,
+  REDIRECT_URI: INSTAGRAM_CONFIG.REDIRECT_URI,
+  SCOPES: INSTAGRAM_CONFIG.SCOPES,
   OAUTH_BASE_URL: "https://www.instagram.com/oauth/authorize",
 };
 
@@ -97,7 +90,7 @@ export const generateInstagramOAuthUrl = (options = {}) => {
     ...(state && { state }),
   });
 
-  return `${INSTAGRAM_CONFIG.OAUTH_BASE_URL}?${params.toString()}`;
+  return `https://www.instagram.com/oauth/authorize?${params.toString()}`;
 };
 
 /**
@@ -195,7 +188,7 @@ export const getInstagramErrorMessage = (error, errorDescription) => {
 };
 
 export default {
-  INSTAGRAM_CONFIG,
+  INSTAGRAM_CONFIG: LEGACY_INSTAGRAM_CONFIG,
   generateInstagramOAuthUrl,
   getMetaBusinessLoginUrl,
   generateOAuthState,

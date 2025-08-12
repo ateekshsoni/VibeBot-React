@@ -1,20 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SignIn, useUser, useAuth } from "@clerk/clerk-react";
 
 const ClerkLoginPage = () => {
   const { user, isLoaded: userLoaded } = useUser();
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
 
+  // Set flag to indicate authentication is in progress
+  useEffect(() => {
+    sessionStorage.setItem('clerk-redirect-in-progress', 'true');
+    
+    return () => {
+      // Clean up on unmount unless redirecting to dashboard
+      if (!isSignedIn) {
+        sessionStorage.removeItem('clerk-redirect-in-progress');
+      }
+    };
+  }, [isSignedIn]);
+
   // Wait for both auth and user to load
   const isLoaded = authLoaded && userLoaded;
-
-  // Let Clerk handle redirects with forceRedirectUrl - remove manual navigation
-  // React.useEffect(() => {
-  //   if (isLoaded && isSignedIn && user) {
-  //     console.log("✅ User authenticated, redirecting to dashboard");
-  //     navigate("/dashboard", { replace: true });
-  //   }
-  // }, [isLoaded, isSignedIn, user, navigate]);
 
   // Show loading state while checking authentication
   if (!isLoaded) {

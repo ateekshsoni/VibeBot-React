@@ -1,16 +1,15 @@
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { getErrorMessage, isNetworkError, isAuthError } from "../lib/api";
+import { API_CONFIG, ENDPOINTS } from "../lib/config";
 
 export const useAPI = () => {
   const { getToken, signOut } = useAuth();
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://vibeBot-v1.onrender.com/api";
 
-  // Create axios instance for this hook
+  // Create axios instance for this hook using centralized config
   const apiClient = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 30000,
+    baseURL: API_CONFIG.BASE_URL,
+    timeout: API_CONFIG.TIMEOUT,
     headers: {
       "Content-Type": "application/json",
     },
@@ -56,7 +55,7 @@ export const useAPI = () => {
       }
 
       // Handle authentication errors
-      if (isAuthError(error)) {
+      if (error.response?.status === 401) {
         console.warn("Authentication failed - signing out user");
         try {
           await signOut();
@@ -68,10 +67,10 @@ export const useAPI = () => {
       }
 
       // Show user-friendly error messages
-      const message = getErrorMessage(error);
+      const message = error.response?.data?.message || error.message || "An unexpected error occurred";
       
-      // Don't show toast for network errors in certain cases
-      if (!isNetworkError(error) || error.config?.method !== 'get') {
+      // Don't show toast for network errors on GET requests
+      if (!(error.code === "NETWORK_ERROR" || !error.response) || error.config?.method !== 'get') {
         toast.error(message);
       }
 
@@ -138,7 +137,7 @@ export const useAPI = () => {
       const response = await apiClient({
         url: "/health",
         method: "GET",
-        baseURL: API_BASE_URL.replace('/api', ''), // Remove /api for health endpoint
+        baseURL: API_CONFIG.BASE_URL.replace('/api', ''), // Remove /api for health endpoint
         timeout: 10000,
       });
       return response.data;
@@ -158,5 +157,12 @@ export const useAPI = () => {
     healthCheck,
     // Expose the axios instance for advanced usage
     client: apiClient,
+    // Compatibility method for existing code
+    makeAuthenticatedRequest: async (endpoint, options = {}) => {
+      return apiClient({
+        url: endpoint,
+        ...options,
+      });
+    }
   };
 };

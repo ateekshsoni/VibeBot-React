@@ -1,27 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SignUp, useUser, useAuth } from "@clerk/clerk-react";
 
 const ClerkSignupPage = () => {
   const { user, isLoaded: userLoaded } = useUser();
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
 
+  // Set flag to indicate authentication is in progress
+  useEffect(() => {
+    sessionStorage.setItem('clerk-redirect-in-progress', 'true');
+    
+    return () => {
+      // Clean up on unmount unless redirecting to dashboard
+      if (!isSignedIn) {
+        sessionStorage.removeItem('clerk-redirect-in-progress');
+      }
+    };
+  }, [isSignedIn]);
+
   // Wait for both auth and user to load
   const isLoaded = authLoaded && userLoaded;
-
-  // Let Clerk handle redirects with forceRedirectUrl - remove manual navigation
-  // Only redirect if fully authenticated and email is verified
-  // This prevents interrupting the OTP verification process
-  // React.useEffect(() => {
-  //   if (isLoaded && isSignedIn && user) {
-  //     // Check if user has verified their email (completed the full signup process)
-  //     const hasVerifiedEmail = user.emailAddresses?.some(email => email.verification?.status === "verified");
-      
-  //     if (hasVerifiedEmail) {
-  //       console.log("✅ User fully authenticated, redirecting to dashboard");
-  //       navigate("/dashboard", { replace: true });
-  //     }
-  //   }
-  // }, [isLoaded, isSignedIn, user, navigate]);
 
   // Show loading state while checking authentication
   if (!isLoaded) {

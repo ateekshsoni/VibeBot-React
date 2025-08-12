@@ -46,7 +46,7 @@ const DashboardWrapper = ({ children }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [user, isLoaded]);
+  }, [user, authLoaded, userLoaded]); // Fixed: use authLoaded and userLoaded instead of undefined isLoaded
 
   // Show sync loading for a limited time, then continue even if backend fails
   if (syncLoading && !allowContinue && backendConnected && !syncError) {

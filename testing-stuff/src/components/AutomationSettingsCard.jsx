@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth, useUser, useSession } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 import { useAPI } from "@/hooks/useAPI";
+import { useInstagram } from "@/hooks/useInstagram";
 import {
   Card,
   CardContent,
@@ -18,11 +19,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const AutomationSettingsCard = () => {
+const AutomationSettingsCard = ({ onAutomationChange }) => {
   const auth = useAuth();
   const { user } = useUser();
   const { session } = useSession();
   const { get, put } = useAPI();
+  const { instagramStatus, checkInstagramStatus } = useInstagram();
+
+  // Get Instagram connection status
+  const instagramConnected = instagramStatus.connected;
 
   const [settings, setSettings] = useState({
     keywords: [],
@@ -70,6 +75,13 @@ const AutomationSettingsCard = () => {
 
     fetchSettings();
   }, [auth?.isSignedIn, user?.id, session?.id]);
+
+  // Check Instagram status when component mounts
+  useEffect(() => {
+    if (auth?.isSignedIn && user) {
+      checkInstagramStatus();
+    }
+  }, [auth?.isSignedIn, user?.id, checkInstagramStatus]);
 
   const saveSettings = async () => {
     if (!instagramConnected) {

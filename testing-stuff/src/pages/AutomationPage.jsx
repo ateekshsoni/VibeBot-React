@@ -248,7 +248,6 @@ const AutomationPage = () => {
         {/* Right Column */}
         <div className="space-y-6">
           <AutomationSettingsCard 
-            instagramConnected={instagramConnected}
             onAutomationChange={(enabled) => setAutomationEnabled(enabled)}
           />
           

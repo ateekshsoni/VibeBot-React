@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAPI } from './useAPI';
 
 /**
@@ -24,7 +24,7 @@ export const useActivityFeed = (initialLimit = 10) => {
     instagramConnected: false
   });
 
-  const fetchActivities = async (limit = initialLimit, offset = 0, append = false) => {
+  const fetchActivities = useCallback(async (limit = initialLimit, offset = 0, append = false) => {
     try {
       if (!append) {
         setLoading(true);
@@ -71,7 +71,7 @@ export const useActivityFeed = (initialLimit = 10) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [get, initialLimit, activities.length]);
 
   const loadMore = async () => {
     if (pagination.hasMore && !loading) {
@@ -87,7 +87,7 @@ export const useActivityFeed = (initialLimit = 10) => {
   // Initial fetch
   useEffect(() => {
     fetchActivities();
-  }, []);
+  }, [fetchActivities]);
 
   // Auto-refresh every 2 minutes to get new activities
   useEffect(() => {
@@ -99,7 +99,7 @@ export const useActivityFeed = (initialLimit = 10) => {
     }, 120000); // 2 minutes to reduce load
 
     return () => clearInterval(interval);
-  }, []); // Empty dependency array to prevent infinite loops
+  }, [fetchActivities, pagination.offset, pagination.limit]); // Fixed dependencies
 
   // Helper function to get activities by type
   const getActivitiesByType = (type) => {

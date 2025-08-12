@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth, useUser, useSession } from "@clerk/clerk-react";
 // import { useInstagram } from "../hooks/useInstagram";
 import { toast } from "react-hot-toast";
+import { navigateToRoute } from "@/utils/navigation";
 
 /**
  * Instagram Business Connect Button Component
@@ -110,7 +111,8 @@ const InstagramConnectButton = ({
           if (data.success) {
             console.log("🚀 Instagram OAuth URL received, redirecting...");
             toast.success("🔄 Redirecting to Instagram...");
-            window.location.href = data.authUrl;
+            // Use external navigation for OAuth redirect
+            navigateToRoute(data.authUrl, true);
             return;
           } else {
             console.error("❌ Initiate endpoint returned error:", data.error);
@@ -142,7 +144,7 @@ const InstagramConnectButton = ({
         if (data.success) {
           console.log("🚀 Session-based OAuth URL received, redirecting...");
           toast.success("🔄 Redirecting to Instagram...");
-          window.location.href = data.authUrl;
+          navigateToRoute(data.authUrl, true);
           return;
         } else {
           console.error("❌ Session-based approach failed:", data.error);
@@ -158,8 +160,7 @@ const InstagramConnectButton = ({
       toast.success("🔄 Connecting via secure session...");
 
       // Use the original endpoint for direct redirect
-      window.location.href =
-        "https://vibeBot-v1.onrender.com/api/auth/instagram";
+      navigateToRoute("https://vibeBot-v1.onrender.com/api/auth/instagram", true);
     } catch (error) {
       console.error("❌ Fatal error in Instagram connect:", error);
       toast.error("❌ Failed to connect Instagram. Please try again.");

@@ -24,23 +24,19 @@ import {
   pulseAnimation,
   staggerContainer 
 } from '@/lib/framerVariants';
+import { navigateToRoute, scrollToElement } from '@/utils/navigation';
 
 const Hero = () => {
   const [email, setEmail] = useState('');
 
   const handleGetStarted = () => {
-    // Use React Router navigation instead of window.location
-    const currentPath = window.location.pathname;
-    if (currentPath === '/') {
-      window.location.href = '/sign-up';
-    }
+    // Use safe navigation utility
+    navigateToRoute('/sign-up');
   };
 
   const handleViewFeatures = () => {
-    // Scroll to features section
-    document.getElementById('features')?.scrollIntoView({ 
-      behavior: 'smooth' 
-    });
+    // Scroll to features section safely
+    scrollToElement('features');
   };
 
   const floatingIcons = [

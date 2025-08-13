@@ -2,7 +2,7 @@
  * Simplified Instagram integration utilities
  * Using axios for better API handling and direct Meta OAuth URL approach
  */
-import { makeAuthenticatedRequest } from '@/lib/apiClient';
+import { makeAuthenticatedRequest } from "@/lib/apiClient";
 
 /**
  * Connect Instagram using direct Meta OAuth URL
@@ -22,9 +22,9 @@ export const connectInstagramSimple = async (auth, user, session) => {
     try {
       // Use axios with proper authentication
       const userResponse = await makeAuthenticatedRequest(auth, user, session, {
-        method: 'GET',
-  url: '/api/user/profile',
-        timeout: 10000
+        method: "GET",
+        url: "/user/profile",
+        timeout: 10000,
       });
 
       console.log("📥 User profile response status:", userResponse.status);
@@ -94,9 +94,9 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
     console.log("🔍 Checking Instagram status...");
 
     const response = await makeAuthenticatedRequest(auth, user, session, {
-      method: 'GET',
-  url: '/api/user/instagram/status',
-      timeout: 10000
+      method: "GET",
+      url: "/user/instagram/status",
+      timeout: 10000,
     });
 
     console.log("Instagram status response:", response.data);
@@ -107,19 +107,23 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
     };
   } catch (error) {
     console.error("Error checking Instagram status:", error);
-    
+
     // Provide more specific error messages
     if (error.response?.status === 401) {
-      console.error("❌ Authentication failed - please sign out and sign back in");
+      console.error(
+        "❌ Authentication failed - please sign out and sign back in"
+      );
       return { connected: false, error: "Authentication failed" };
     } else if (error.response?.status === 404) {
-      console.error("❌ Endpoint not found - backend may not have this endpoint");
+      console.error(
+        "❌ Endpoint not found - backend may not have this endpoint"
+      );
       return { connected: false, error: "Service unavailable" };
-    } else if (error.code === 'ECONNABORTED') {
+    } else if (error.code === "ECONNABORTED") {
       console.error("❌ Request timeout");
       return { connected: false, error: "Request timeout" };
     }
-    
+
     return { connected: false, error: error.message };
   }
 };
@@ -132,9 +136,9 @@ export const disconnectInstagramSimple = async (auth, user, session) => {
     console.log("🔌 Disconnecting Instagram account...");
 
     const response = await makeAuthenticatedRequest(auth, user, session, {
-      method: 'POST',
-  url: '/api/user/instagram/disconnect',
-      timeout: 10000
+      method: "POST",
+      url: "/user/instagram/disconnect",
+      timeout: 10000,
     });
 
     console.log("Instagram disconnected:", response.data);

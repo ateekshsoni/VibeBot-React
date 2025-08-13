@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
-import { toast } from 'react-hot-toast';
-import { API_CONFIG } from '../lib/config';
-import { withCircuitBreaker, getCircuitBreakerStatus } from '../utils/circuitBreaker';
-import { useAPI } from './useAPI';
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import { toast } from "react-hot-toast";
+import { API_CONFIG } from "../lib/config";
+import {
+  withCircuitBreaker,
+  getCircuitBreakerStatus,
+} from "../utils/circuitBreaker";
+import { useAPI } from "./useAPI";
 
 export const useInstagram = () => {
   const { getToken, isSignedIn } = useAuth();
@@ -12,7 +15,7 @@ export const useInstagram = () => {
     connected: false,
     username: null,
     loading: true,
-    error: null
+    error: null,
   });
 
   // Circuit breaker protection for Instagram status checks
@@ -22,41 +25,44 @@ export const useInstagram = () => {
   const checkInstagramStatus = async () => {
     try {
       // Check circuit breaker status first
-      const breakerStatus = getCircuitBreakerStatus('instagram');
+      const breakerStatus = getCircuitBreakerStatus("instagram");
       if (breakerStatus?.isBlocking || circuitBreakerActive) {
-        console.warn('⚠️ Instagram status check circuit breaker active - too many retries');
-        setInstagramStatus(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: 'Service temporarily unavailable - please try again in a few minutes' 
+        console.warn(
+          "⚠️ Instagram status check circuit breaker active - too many retries"
+        );
+        setInstagramStatus((prev) => ({
+          ...prev,
+          loading: false,
+          error:
+            "Service temporarily unavailable - please try again in a few minutes",
         }));
         return;
       }
 
-      setInstagramStatus(prev => ({ ...prev, loading: true }));
-      
+      setInstagramStatus((prev) => ({ ...prev, loading: true }));
+
       // Check if user is authenticated first
       if (!isSignedIn) {
         setInstagramStatus({
           connected: false,
           username: null,
           loading: false,
-          error: 'User not authenticated'
+          error: "User not authenticated",
         });
         return;
       }
 
       // Use circuit breaker for the API call with proper endpoint
       const result = await withCircuitBreaker(
-        'instagram',
+        "instagram",
         async () => {
           // Use the proper useAPI hook with correct endpoint
-          const response = await get('/api/user/instagram/status');
+          const response = await get("/user/instagram/status");
           return response;
         },
         () => {
           // Fallback function
-          console.log('📱 Using Instagram status fallback');
+          console.log("📱 Using Instagram status fallback");
           return { connected: false, username: null };
         }
       );
@@ -65,25 +71,29 @@ export const useInstagram = () => {
         connected: result.connected || false,
         username: result.username || null,
         loading: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
-      console.error('❌ Error checking Instagram status:', error);
-      
+      console.error("❌ Error checking Instagram status:", error);
+
       // Activate local circuit breaker for too many failures
-      if (error.message.includes('401') || error.message.includes('authentication')) {
-        console.log('🔒 Authentication failed - token may be invalid or expired');
+      if (
+        error.message.includes("401") ||
+        error.message.includes("authentication")
+      ) {
+        console.log(
+          "🔒 Authentication failed - token may be invalid or expired"
+        );
         setCircuitBreakerActive(true);
         // Reset after 5 minutes
         setTimeout(() => setCircuitBreakerActive(false), 300000);
       }
-      
+
       setInstagramStatus({
         connected: false,
         username: null,
         loading: false,
-        error: 'Authentication failed'
+        error: "Authentication failed",
       });
     }
   };
@@ -91,10 +101,10 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-  const response = await get('/api/user/profile');
+      const response = await get("/user/profile");
       return response.user?._id || response.user?.id;
     } catch (error) {
-      console.error('Error getting user database ID:', error);
+      console.error("Error getting user database ID:", error);
       throw error;
     }
   };
@@ -102,55 +112,60 @@ export const useInstagram = () => {
   // Connect to Instagram using direct Meta Console URL
   const connectInstagram = async () => {
     try {
-      console.log('🔄 Starting Instagram connection...');
-      
+      console.log("🔄 Starting Instagram connection...");
+
       // Check if user is authenticated first
       if (!isSignedIn) {
-        throw new Error('Please login first');
+        throw new Error("Please login first");
       }
-      
+
       // Check circuit breaker
-      const breakerStatus = getCircuitBreakerStatus('instagram');
+      const breakerStatus = getCircuitBreakerStatus("instagram");
       if (breakerStatus?.isBlocking || circuitBreakerActive) {
-        throw new Error('Instagram service temporarily unavailable. Please try again in a few minutes.');
+        throw new Error(
+          "Instagram service temporarily unavailable. Please try again in a few minutes."
+        );
       }
-      
+
       // Get user database ID for state parameter with circuit breaker protection
       const userId = await withCircuitBreaker(
-        'instagram',
+        "instagram",
         () => getUserDatabaseId(),
         () => {
           // Fallback: use clerk user ID
-          console.log('Using Clerk user ID as fallback');
+          console.log("Using Clerk user ID as fallback");
           return isSignedIn ? `clerk_${Date.now()}` : null;
         }
       );
-      
+
       if (!userId) {
-        throw new Error('Unable to get user ID');
+        throw new Error("Unable to get user ID");
       }
 
       // Meta Console URL with state parameter
-      const baseUrl = 'https://www.instagram.com/oauth/authorize';
+      const baseUrl = "https://www.instagram.com/oauth/authorize";
       const params = new URLSearchParams({
-        force_reauth: 'true',
-        client_id: '1807810336807413',
-        redirect_uri: `${API_CONFIG.BASE_URL.replace('/api', '')}/api/auth/instagram/callback`,
-        response_type: 'code',
-        scope: 'instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights',
-        state: `user_${userId}_${Date.now()}`
+        force_reauth: "true",
+        client_id: "1807810336807413",
+        redirect_uri: `${API_CONFIG.BASE_URL.replace(
+          "/api",
+          ""
+        )}/api/auth/instagram/callback`,
+        response_type: "code",
+        scope:
+          "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish,instagram_business_manage_insights",
+        state: `user_${userId}_${Date.now()}`,
       });
 
       const instagramOAuthUrl = `${baseUrl}?${params.toString()}`;
-      
-      console.log('🚀 Redirecting to Instagram OAuth:', instagramOAuthUrl);
-      toast.success('Redirecting to Instagram...');
-      
+
+      console.log("🚀 Redirecting to Instagram OAuth:", instagramOAuthUrl);
+      toast.success("Redirecting to Instagram...");
+
       // Direct redirect to Instagram OAuth
       window.location.href = instagramOAuthUrl;
-      
     } catch (error) {
-      console.error('❌ Failed to initiate Instagram connection:', error);
+      console.error("❌ Failed to initiate Instagram connection:", error);
       toast.error(`Failed to connect Instagram: ${error.message}`);
       throw error;
     }
@@ -159,22 +174,22 @@ export const useInstagram = () => {
   // Associate Instagram data with user (Scenario B)
   const associateInstagramData = async (instagramData) => {
     try {
-      console.log('🔄 Associating Instagram data with user...');
-      
-      const result = await post('/auth/instagram/associate', {
+      console.log("🔄 Associating Instagram data with user...");
+
+      const result = await post("/auth/instagram/associate", {
         instagram_token: instagramData.instagram_token,
         instagram_id: instagramData.instagram_id,
         instagram_username: instagramData.instagram_username,
         instagram_expires: instagramData.instagram_expires,
-        instagram_account_type: instagramData.instagram_account_type
+        instagram_account_type: instagramData.instagram_account_type,
       });
-      
+
       // Update status after successful association
       await checkInstagramStatus();
-      
+
       return result;
     } catch (error) {
-      console.error('❌ Failed to associate Instagram data:', error);
+      console.error("❌ Failed to associate Instagram data:", error);
       throw error;
     }
   };
@@ -182,19 +197,19 @@ export const useInstagram = () => {
   // Disconnect Instagram
   const disconnectInstagram = async () => {
     try {
-      await post('/auth/instagram/disconnect');
+      await post("/auth/instagram/disconnect");
 
       // Update status after disconnection
       setInstagramStatus({
         connected: false,
         username: null,
         loading: false,
-        error: null
+        error: null,
       });
 
-      toast.success('Instagram account disconnected');
+      toast.success("Instagram account disconnected");
     } catch (error) {
-      console.error('❌ Failed to disconnect Instagram:', error);
+      console.error("❌ Failed to disconnect Instagram:", error);
       toast.error(`Failed to disconnect: ${error.message}`);
       throw error;
     }
@@ -215,6 +230,6 @@ export const useInstagram = () => {
     connectInstagram,
     associateInstagramData,
     disconnectInstagram,
-    refreshStatus: checkInstagramStatus
+    refreshStatus: checkInstagramStatus,
   };
 };

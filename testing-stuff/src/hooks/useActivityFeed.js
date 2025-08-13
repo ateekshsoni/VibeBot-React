@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAPI } from './useAPI';
+import { useState, useEffect, useCallback } from "react";
+import { useAPI } from "./useAPI";
 
 /**
  * Hook to fetch and manage user activity feed
@@ -7,7 +7,7 @@ import { useAPI } from './useAPI';
  */
 export const useActivityFeed = (initialLimit = 10) => {
   const { get } = useAPI();
-  
+
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,69 +15,78 @@ export const useActivityFeed = (initialLimit = 10) => {
     limit: initialLimit,
     offset: 0,
     total: 0,
-    hasMore: false
+    hasMore: false,
   });
   const [summary, setSummary] = useState({
     totalActivities: 0,
     recentActivity: null,
     automationActive: false,
-    instagramConnected: false
+    instagramConnected: false,
   });
 
-  const fetchActivities = useCallback(async (limit = initialLimit, offset = 0, append = false) => {
-    try {
-      if (!append) {
-        setLoading(true);
-      }
-      setError(null);
-      
-  const response = await get(`/api/user/activity?limit=${limit}&offset=${offset}`);
-      
-      if (response.success) {
-        const newActivities = response.activities || [];
-        
-        if (append) {
-          // Append to existing activities (for load more)
-          setActivities(prev => [...prev, ...newActivities]);
-        } else {
-          // Replace activities (for initial load or refresh)
-          setActivities(newActivities);
+  const fetchActivities = useCallback(
+    async (limit = initialLimit, offset = 0, append = false) => {
+      try {
+        if (!append) {
+          setLoading(true);
         }
-        
-        setPagination(response.pagination || {
-          limit,
-          offset,
-          total: newActivities.length,
-          hasMore: false
-        });
-        
-        setSummary(response.summary || {
-          totalActivities: newActivities.length,
-          recentActivity: newActivities[0]?.timestamp || null,
-          automationActive: false,
-          instagramConnected: false
-        });
-      } else {
-        throw new Error('Invalid response format');
+        setError(null);
+
+        const response = await get(
+          `/user/activity?limit=${limit}&offset=${offset}`
+        );
+
+        if (response.success) {
+          const newActivities = response.activities || [];
+
+          if (append) {
+            // Append to existing activities (for load more)
+            setActivities((prev) => [...prev, ...newActivities]);
+          } else {
+            // Replace activities (for initial load or refresh)
+            setActivities(newActivities);
+          }
+
+          setPagination(
+            response.pagination || {
+              limit,
+              offset,
+              total: newActivities.length,
+              hasMore: false,
+            }
+          );
+
+          setSummary(
+            response.summary || {
+              totalActivities: newActivities.length,
+              recentActivity: newActivities[0]?.timestamp || null,
+              automationActive: false,
+              instagramConnected: false,
+            }
+          );
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (err) {
+        console.error("Failed to fetch activity feed:", err);
+        setError(err.message);
+
+        // Set empty state on error to prevent infinite loops
+        if (!append) {
+          setActivities([]);
+          setPagination({
+            limit: initialLimit,
+            offset: 0,
+            total: 0,
+            hasMore: false,
+          });
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch activity feed:', err);
-      setError(err.message);
-      
-      // Set empty state on error to prevent infinite loops
-      if (!append) {
-        setActivities([]);
-        setPagination({
-          limit: initialLimit,
-          offset: 0,
-          total: 0,
-          hasMore: false
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [get, initialLimit]); // Removed activities.length dependency causing infinite loop
+    },
+    [get, initialLimit]
+  ); // Removed activities.length dependency causing infinite loop
 
   const loadMore = async () => {
     if (pagination.hasMore && !loading) {
@@ -110,16 +119,16 @@ export const useActivityFeed = (initialLimit = 10) => {
 
   // Helper function to get activities by type
   const getActivitiesByType = (type) => {
-    return activities.filter(activity => activity.type === type);
+    return activities.filter((activity) => activity.type === type);
   };
 
   // Helper function to get recent activities (last 24 hours)
   const getRecentActivities = (hours = 24) => {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - hours);
-    
-    return activities.filter(activity => 
-      new Date(activity.timestamp) > cutoff
+
+    return activities.filter(
+      (activity) => new Date(activity.timestamp) > cutoff
     );
   };
 
@@ -129,27 +138,27 @@ export const useActivityFeed = (initialLimit = 10) => {
     error,
     pagination,
     summary,
-    
+
     // Actions
     loadMore,
     refresh,
-    
+
     // Utility functions
     getActivitiesByType,
     getRecentActivities,
-    
+
     // Computed values
     hasActivities: activities.length > 0,
     canLoadMore: pagination.hasMore && !loading,
     isRefreshing: loading && activities.length > 0,
-    
+
     // Activity type counts
     activityCounts: {
-      automationTriggered: getActivitiesByType('automation_triggered').length,
-      automationEnabled: getActivitiesByType('automation_enabled').length,
-      instagramConnected: getActivitiesByType('instagram_connected').length,
-      settingsUpdated: getActivitiesByType('settings_updated').length
-    }
+      automationTriggered: getActivitiesByType("automation_triggered").length,
+      automationEnabled: getActivitiesByType("automation_enabled").length,
+      instagramConnected: getActivitiesByType("instagram_connected").length,
+      settingsUpdated: getActivitiesByType("settings_updated").length,
+    },
   };
 };
 

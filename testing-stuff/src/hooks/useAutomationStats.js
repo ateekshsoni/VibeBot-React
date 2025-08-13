@@ -51,7 +51,7 @@ export const useAutomationStats = () => {
       setLoading(true);
       setError(null);
 
-  const response = await get("/api/user/automation/stats");
+      const response = await get("/user/automation/stats");
 
       if (response.success && response.stats) {
         setStats(response.stats);

@@ -62,14 +62,11 @@ export const useBackendSync = () => {
         const result = await withCircuitBreaker("backendSync", async () => {
           const response = await makeAuthenticatedRequest("/backend/sync", {
             method: "POST",
-            body: JSON.stringify(userData),
+            data: userData, // Use 'data' for axios, not 'body'
           });
 
-          if (!response.ok) {
-            throw new Error(`Sync failed: ${response.status}`);
-          }
-
-          return await response.json();
+          // For axios, response is already parsed
+          return response.data;
         });
 
         console.log("✅ Backend sync successful:", result);

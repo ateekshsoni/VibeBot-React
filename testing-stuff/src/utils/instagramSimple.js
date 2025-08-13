@@ -23,7 +23,7 @@ export const connectInstagramSimple = async (auth, user, session) => {
       // Use axios with proper authentication
       const userResponse = await makeAuthenticatedRequest(auth, user, session, {
         method: 'GET',
-        url: '/user/profile',
+  url: '/api/user/profile',
         timeout: 10000
       });
 
@@ -95,7 +95,7 @@ export const checkInstagramStatusSimple = async (auth, user, session) => {
 
     const response = await makeAuthenticatedRequest(auth, user, session, {
       method: 'GET',
-      url: '/user/instagram/status',
+  url: '/api/user/instagram/status',
       timeout: 10000
     });
 
@@ -133,7 +133,7 @@ export const disconnectInstagramSimple = async (auth, user, session) => {
 
     const response = await makeAuthenticatedRequest(auth, user, session, {
       method: 'POST',
-      url: '/user/instagram/disconnect',
+  url: '/api/user/instagram/disconnect',
       timeout: 10000
     });
 

@@ -51,7 +51,7 @@ export const useInstagram = () => {
         'instagram',
         async () => {
           // Use the proper useAPI hook with correct endpoint
-          const response = await get('/user/instagram/status');
+          const response = await get('/api/user/instagram/status');
           return response;
         },
         () => {
@@ -91,7 +91,7 @@ export const useInstagram = () => {
   // Get user database ID for state parameter
   const getUserDatabaseId = async () => {
     try {
-      const response = await get('/user/profile');
+  const response = await get('/api/user/profile');
       return response.user?._id || response.user?.id;
     } catch (error) {
       console.error('Error getting user database ID:', error);

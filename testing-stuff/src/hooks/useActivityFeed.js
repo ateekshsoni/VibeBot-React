@@ -3,7 +3,7 @@ import { useAPI } from './useAPI';
 
 /**
  * Hook to fetch and manage user activity feed
- * Uses the new /api/user/activity endpoint with pagination
+ * Uses the /api/user/activity endpoint with pagination
  */
 export const useActivityFeed = (initialLimit = 10) => {
   const { get } = useAPI();
@@ -31,7 +31,7 @@ export const useActivityFeed = (initialLimit = 10) => {
       }
       setError(null);
       
-      const response = await get(`/user/activity?limit=${limit}&offset=${offset}`);
+  const response = await get(`/api/user/activity?limit=${limit}&offset=${offset}`);
       
       if (response.success) {
         const newActivities = response.activities || [];

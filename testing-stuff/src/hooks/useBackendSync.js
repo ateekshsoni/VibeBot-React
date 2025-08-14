@@ -110,9 +110,20 @@ export const useBackendSync = () => {
     ]
   );
 
-  // Auto-sync when user data is available
+  // Auto-sync when user data is available (once per session)
   useEffect(() => {
     if (user && isLoaded && !syncCircuitBreakerActive && !isSyncing) {
+      // Check if we've already synced in this session
+      const sessionKey = `backend-sync-completed-${user.id}`;
+      const sessionSynced = sessionStorage.getItem(sessionKey);
+      
+      if (sessionSynced) {
+        console.log("🔄 Backend sync skipped - already synced this session");
+        setIsBackendSynced(true);
+        setBackendConnected(true);
+        return;
+      }
+
       // Check if we're in the middle of an authentication flow
       const isAuthenticationFlow =
         window.location.pathname.includes("/sign-") ||
@@ -126,25 +137,28 @@ export const useBackendSync = () => {
         return;
       }
 
-      // Add a delay and only sync if we're not in auth flow
+      // Add a delay and only sync once per session
       const timer = setTimeout(() => {
         // Double-check we're not in auth flow after the delay
         const stillInAuthFlow =
           window.location.pathname.includes("/sign-") ||
           window.location.search.includes("__clerk_");
 
-        if (!stillInAuthFlow && !syncCircuitBreakerActive && !isSyncing) {
-          syncUserWithBackend();
+        if (!stillInAuthFlow && !syncCircuitBreakerActive && !isSyncing && !sessionStorage.getItem(sessionKey)) {
+          syncUserWithBackend().then(() => {
+            // Mark this session as synced to prevent repeated syncs
+            sessionStorage.setItem(sessionKey, 'true');
+          });
         } else {
           console.log(
-            "🔄 Backend sync skipped - still in auth flow after delay"
+            "🔄 Backend sync skipped - still in auth flow after delay or already synced"
           );
         }
       }, 2000);
 
       return () => clearTimeout(timer);
     }
-  }, [user?.id, isLoaded, syncCircuitBreakerActive, isSyncing]); // Simplified dependencies
+  }, [user?.id, isLoaded]); // Simplified dependencies - remove reactive ones that cause re-syncs
 
   return {
     syncUserWithBackend,

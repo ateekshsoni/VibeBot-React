@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { API_CONFIG, ENDPOINTS } from "../lib/config";
+import { requestCoordinator } from "../utils/requestCoordinator";
 
 export const useAPI = () => {
   const { getToken, signOut } = useAuth();
@@ -103,21 +104,32 @@ export const useAPI = () => {
   );
 
   const apiCall = async (endpoint, options = {}) => {
-    try {
-      const response = await apiClient({
-        url: endpoint,
-        ...options,
-      });
+    // Use request coordinator for better performance and prevent server overload
+    return requestCoordinator.coordinateRequest(
+      endpoint,
+      async () => {
+        try {
+          const response = await apiClient({
+            url: endpoint,
+            ...options,
+          });
 
-      return response.data;
-    } catch (error) {
-      // Re-throw with additional context
-      throw {
-        ...error,
-        endpoint,
-        timestamp: new Date().toISOString(),
-      };
-    }
+          return response.data;
+        } catch (error) {
+          // Re-throw with additional context
+          throw {
+            ...error,
+            endpoint,
+            timestamp: new Date().toISOString(),
+          };
+        }
+      },
+      {
+        priority: options.priority || 'normal',
+        dedupe: options.dedupe !== false, // Default to true
+        maxAge: options.maxAge || 30000,
+      }
+    );
   };
 
   // HTTP method helpers

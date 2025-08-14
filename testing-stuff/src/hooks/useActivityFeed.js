@@ -105,16 +105,24 @@ export const useActivityFeed = (initialLimit = 10) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount to prevent infinite loops
 
-  // Auto-refresh every 2 minutes to get new activities
+  // Session-based auto-refresh to prevent server overload
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Only auto-refresh if we're showing the first page
-      if (pagination.offset === 0) {
-        fetchActivities(pagination.limit, 0, false);
-      }
-    }, 120000); // 2 minutes to reduce load
+    // Check if we've already auto-refreshed in this session
+    const sessionKey = `activity-feed-last-refresh-${new Date().toDateString()}`;
+    const lastRefresh = sessionStorage.getItem(sessionKey);
+    const now = Date.now();
+    
+    // Only auto-refresh once every 15 minutes and only on first page
+    if (pagination.offset === 0) {
+      if (!lastRefresh || (now - parseInt(lastRefresh)) > 900000) {
+        const interval = setInterval(() => {
+          fetchActivities(pagination.limit, 0, false);
+          sessionStorage.setItem(sessionKey, now.toString());
+        }, 900000); // Increased from 2min to 15 minutes to prevent server overload
 
-    return () => clearInterval(interval);
+        return () => clearInterval(interval);
+      }
+    }
   }, [pagination.offset, pagination.limit]); // Removed fetchActivities dependency
 
   // Helper function to get activities by type

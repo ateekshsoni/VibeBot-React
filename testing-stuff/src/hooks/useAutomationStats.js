@@ -78,15 +78,24 @@ export const useAutomationStats = () => {
     fetchStats();
   }, []);
 
-  // Auto-refresh every 60 seconds if automation is enabled
+  // Session-based refresh to prevent server overload
   useEffect(() => {
     if (!stats.isEnabled) return;
 
-    const interval = setInterval(() => {
-      fetchStats();
-    }, 60000); // 60 seconds to reduce load
+    // Check if we've already auto-refreshed in this session
+    const sessionKey = `automation-stats-last-refresh-${new Date().toDateString()}`;
+    const lastRefresh = sessionStorage.getItem(sessionKey);
+    const now = Date.now();
+    
+    // Only auto-refresh once every 10 minutes to prevent server overload
+    if (!lastRefresh || (now - parseInt(lastRefresh)) > 600000) {
+      const interval = setInterval(() => {
+        fetchStats();
+        sessionStorage.setItem(sessionKey, now.toString());
+      }, 600000); // Increased from 60s to 10 minutes to prevent server overload
 
-    return () => clearInterval(interval);
+      return () => clearInterval(interval);
+    }
   }, [stats.isEnabled]); // Removed lastFetch dependency to prevent infinite loops
 
   return {
